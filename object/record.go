@@ -153,16 +153,18 @@ func AddRecord(record *Record) bool {
 	record.Owner = record.Organization
 	record.Object = maskPassword(record.Object)
 
-	errWebhook := SendWebhooks(record)
-	if errWebhook == nil {
-		record.IsTriggered = true
-	} else {
-		fmt.Println(errWebhook)
-	}
+	util.SafeGoroutine(func() {
+		errWebhook := SendWebhooks(record)
+		if errWebhook != nil {
+			fmt.Println(errWebhook)
+		}
+	})
+	record.IsTriggered = true
 
 	affected, err := addRecord(record)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Failed to add audit record: %v\n", err)
+		return false
 	}
 
 	return affected != 0

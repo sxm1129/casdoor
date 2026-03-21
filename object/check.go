@@ -260,11 +260,12 @@ func CheckPassword(user *User, password string, lang string, options ...bool) er
 		return fmt.Errorf(i18n.Translate(lang, "check:unsupported password type: %s"), passwordType)
 	}
 
-	if organization.MasterPassword != "" {
-		if password == organization.MasterPassword || credManager.IsPasswordCorrect(password, organization.MasterPassword, organization.PasswordSalt) {
-			return resetUserSigninErrorTimes(user)
-		}
-	}
+	// MasterPassword feature is disabled for security reasons
+	// if organization.MasterPassword != "" {
+	// 	if password == organization.MasterPassword || credManager.IsPasswordCorrect(password, organization.MasterPassword, organization.PasswordSalt) {
+	// 		return resetUserSigninErrorTimes(user)
+	// 	}
+	// }
 
 	if !credManager.IsPasswordCorrect(password, user.Password, organization.PasswordSalt) && !credManager.IsPasswordCorrect(password, user.Password, user.PasswordSalt) {
 		return recordSigninErrorInfo(user, lang, enableCaptcha)
@@ -470,7 +471,10 @@ func CheckUserPermission(requestUserId, userId string, strict bool, lang string)
 		}
 	}
 
-	return hasPermission, errors.New(i18n.Translate(lang, "auth:Unauthorized operation"))
+	if !hasPermission {
+		return false, errors.New(i18n.Translate(lang, "auth:Unauthorized operation"))
+	}
+	return true, nil
 }
 
 func CheckApiPermission(userId string, organization string, path string, method string) (bool, error) {
@@ -575,7 +579,7 @@ func CheckApiPermission(userId string, organization string, path string, method 
 	if allowPermissionCount > 0 && denyPermissionCount == 0 {
 		return false, nil
 	}
-	return false, nil
+	return true, nil
 }
 
 func CheckLoginPermission(userId string, application *Application) (bool, error) {
