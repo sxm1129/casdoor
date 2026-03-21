@@ -322,9 +322,10 @@ func GetGroupUserCount(groupId string, field, value string) (int64, error) {
 			return 0, fmt.Errorf("invalid field: %s", field)
 		}
 		tableNamePrefix := conf.GetConfigString("tableNamePrefix")
-		return ormer.Engine.Table(tableNamePrefix+"user").
+		prefixedUserTable := tableNamePrefix + "user"
+		return ormer.Engine.Table(prefixedUserTable).
 			Where("owner = ?", owner).In("name", names).
-			And(fmt.Sprintf("user.%s like ?", util.CamelToSnakeCase(field)), "%"+value+"%").
+			And(fmt.Sprintf("%s.%s like ?", prefixedUserTable, util.CamelToSnakeCase(field)), "%"+value+"%").
 			Count()
 	}
 }
