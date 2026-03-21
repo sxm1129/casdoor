@@ -4,10 +4,10 @@ import "github.com/casdoor/casdoor/util"
 
 type UserIdentity struct {
 	Id           int    `xorm:"int notnull pk autoincr" json:"id"`
-	Owner        string `xorm:"varchar(100) notnull index" json:"owner"`
-	Name         string `xorm:"varchar(100) notnull index" json:"name"`
-	ProviderType string `xorm:"varchar(100) notnull index" json:"providerType"`
-	ProviderId   string `xorm:"varchar(255)" json:"providerId"`
+	Owner        string `xorm:"varchar(100) notnull unique(identity)" json:"owner"`
+	Name         string `xorm:"varchar(100) notnull unique(identity)" json:"name"`
+	ProviderType string `xorm:"varchar(100) notnull unique(identity)" json:"providerType"`
+	ProviderId   string `xorm:"varchar(255) notnull unique(identity)" json:"providerId"`
 	AccessToken  string `xorm:"mediumtext" json:"accessToken"`
 }
 

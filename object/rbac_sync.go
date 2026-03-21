@@ -11,7 +11,7 @@ func syncRoleUserMappings(role *Role) error {
 		return err
 	}
 
-	// Insert new mappings from Users slice
+	// AUDIT BUG-01 fix: pass slice directly, not pointer-to-slice
 	if len(role.Users) > 0 {
 		mappings := make([]UserRole, 0, len(role.Users))
 		for _, userId := range role.Users {
@@ -20,7 +20,7 @@ func syncRoleUserMappings(role *Role) error {
 				Role: roleId,
 			})
 		}
-		_, err = ormer.Engine.Insert(&mappings)
+		_, err = ormer.Engine.Insert(mappings)
 		if err != nil {
 			return err
 		}
@@ -44,7 +44,7 @@ func syncPermissionUserMappings(permission *Permission) error {
 		return err
 	}
 
-	// Insert from Users slice
+	// AUDIT BUG-01 fix: pass slice directly, not pointer-to-slice
 	if len(permission.Users) > 0 {
 		mappings := make([]UserPermission, 0, len(permission.Users))
 		for _, userId := range permission.Users {
@@ -53,7 +53,7 @@ func syncPermissionUserMappings(permission *Permission) error {
 				Permission: permId,
 			})
 		}
-		_, err = ormer.Engine.Insert(&mappings)
+		_, err = ormer.Engine.Insert(mappings)
 		if err != nil {
 			return err
 		}
@@ -71,7 +71,7 @@ func syncPermissionRoleMappings(permission *Permission) error {
 		return err
 	}
 
-	// Insert from Roles slice
+	// AUDIT BUG-01 fix: pass slice directly, not pointer-to-slice
 	if len(permission.Roles) > 0 {
 		mappings := make([]RolePermission, 0, len(permission.Roles))
 		for _, roleId := range permission.Roles {
@@ -80,7 +80,7 @@ func syncPermissionRoleMappings(permission *Permission) error {
 				Permission: permId,
 			})
 		}
-		_, err = ormer.Engine.Insert(&mappings)
+		_, err = ormer.Engine.Insert(mappings)
 		if err != nil {
 			return err
 		}

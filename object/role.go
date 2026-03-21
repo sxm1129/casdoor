@@ -300,7 +300,7 @@ func getRolesByUserInternal(userId string) ([]*Role, error) {
 	// Use JOIN on user_role mapping table instead of LIKE full-table scan
 	rolesByUser := []*Role{}
 	err = ormer.Engine.Alias("r").
-		Join("INNER", "user_role ur", "ur.role = concat(r.owner, '/', r.name)").
+		Join("INNER", "user_role ur", "ur.role = r.owner || '/' || r.name").
 		Where("ur.user = ?", userId).
 		Find(&rolesByUser)
 	if err != nil {

@@ -1205,25 +1205,13 @@ func GetWechatMiniProgramToken(application *Application, code string, host strin
 			return nil, nil, err
 		}
 
-		// Store WeChat identity in UserIdentity table
-		wechatIdentity := &UserIdentity{
-			Owner:        user.Owner,
-			Name:         user.Name,
-			ProviderType: "wechat",
-			ProviderId:   openId,
-		}
-		_, err = ormer.Engine.Insert(wechatIdentity)
+		// AUDIT BUG-04 fix: use upsert to prevent duplicates on repeated login
+		err = UpdateUserIdentity(user.Owner, user.Name, "wechat", openId, "")
 		if err != nil {
 			return nil, nil, err
 		}
 		if unionId != "" && unionId != openId {
-			unionIdentity := &UserIdentity{
-				Owner:        user.Owner,
-				Name:         user.Name,
-				ProviderType: "wechat",
-				ProviderId:   unionId,
-			}
-			_, err = ormer.Engine.Insert(unionIdentity)
+			err = UpdateUserIdentity(user.Owner, user.Name, "wechat", unionId, "")
 			if err != nil {
 				return nil, nil, err
 			}

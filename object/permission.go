@@ -266,6 +266,14 @@ func AddPermissions(permissions []*Permission) (bool, error) {
 			if err != nil {
 				return false, err
 			}
+
+			// AUDIT BUG-05 fix: sync mapping tables for batch insert
+			if err := syncPermissionUserMappings(permission); err != nil {
+				return false, err
+			}
+			if err := syncPermissionRoleMappings(permission); err != nil {
+				return false, err
+			}
 		}
 	}
 	return affected != 0, nil
@@ -340,7 +348,7 @@ func DeletePermission(permission *Permission) (bool, error) {
 func getPermissionsByUser(userId string) ([]*Permission, error) {
 	permissions := []*Permission{}
 	err := ormer.Engine.Alias("p").
-		Join("INNER", "user_permission up", "up.permission = concat(p.owner, '/', p.name)").
+		Join("INNER", "user_permission up", "up.permission = p.owner || '/' || p.name").
 		Where("up.user = ?", userId).
 		Find(&permissions)
 	if err != nil {
@@ -353,7 +361,7 @@ func getPermissionsByUser(userId string) ([]*Permission, error) {
 func GetPermissionsByRole(roleId string) ([]*Permission, error) {
 	permissions := []*Permission{}
 	err := ormer.Engine.Alias("p").
-		Join("INNER", "role_permission rp", "rp.permission = concat(p.owner, '/', p.name)").
+		Join("INNER", "role_permission rp", "rp.permission = p.owner || '/' || p.name").
 		Where("rp.role = ?", roleId).
 		Find(&permissions)
 	if err != nil {
