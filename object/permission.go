@@ -200,6 +200,14 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 		if err != nil {
 			return false, err
 		}
+
+		// Sync mapping tables
+		if err := syncPermissionUserMappings(permission); err != nil {
+			return false, err
+		}
+		if err := syncPermissionRoleMappings(permission); err != nil {
+			return false, err
+		}
 	}
 
 	return affected != 0, nil
@@ -219,6 +227,14 @@ func AddPermission(permission *Permission) (bool, error) {
 
 		err = addPolicies(permission)
 		if err != nil {
+			return false, err
+		}
+
+		// Sync mapping tables
+		if err := syncPermissionUserMappings(permission); err != nil {
+			return false, err
+		}
+		if err := syncPermissionRoleMappings(permission); err != nil {
 			return false, err
 		}
 	}
@@ -312,15 +328,10 @@ func DeletePermission(permission *Permission) (bool, error) {
 			return false, err
 		}
 
-		// if permission.Adapter != "" && permission.Adapter != "permission_rule" {
-		// 	isEmpty, _ := ormer.Engine.IsTableEmpty(permission.Adapter)
-		// 	if isEmpty {
-		// 		err = ormer.Engine.DropTables(permission.Adapter)
-		// 		if err != nil {
-		// 			return false, err
-		// 		}
-		// 	}
-		// }
+		// Clean up mapping tables
+		if err := deletePermissionMappings(permission.GetId()); err != nil {
+			return false, err
+		}
 	}
 
 	return affected, nil

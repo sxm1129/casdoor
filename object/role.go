@@ -143,6 +143,13 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, err
 	}
 
+	// Sync user_role mapping table
+	if affected != 0 {
+		if err := syncRoleUserMappings(role); err != nil {
+			return false, err
+		}
+	}
+
 	visited = map[string]struct{}{}
 	newRoleID := role.GetId()
 	permissions, err = GetPermissionsByRole(newRoleID)
@@ -195,6 +202,13 @@ func AddRole(role *Role) (bool, error) {
 	affected, err := ormer.Engine.Insert(role)
 	if err != nil {
 		return false, err
+	}
+
+	// Sync user_role mapping table
+	if affected != 0 {
+		if err := syncRoleUserMappings(role); err != nil {
+			return false, err
+		}
 	}
 
 	return affected != 0, nil
@@ -260,6 +274,11 @@ func DeleteRole(role *Role) (bool, error) {
 		if err != nil {
 			return false, err
 		}
+	}
+
+	// Clean up user_role mappings
+	if err := deleteRoleUserMappings(roleId); err != nil {
+		return false, err
 	}
 
 	return deleteRole(role)
