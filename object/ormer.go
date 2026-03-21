@@ -129,6 +129,11 @@ func CreateTables() {
 	}
 
 	ormer.createTable()
+
+	err := RunMigration()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Ormer represents the MySQL adapter for policy storage.
@@ -372,6 +377,26 @@ func (a *Ormer) createTable() {
 	}
 
 	err = a.Engine.Sync2(new(Model))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(UserIdentity))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(UserRole))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(RolePermission))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(UserPermission))
 	if err != nil {
 		panic(err)
 	}

@@ -273,9 +273,10 @@ func (p *WecomSyncerProvider) wecomUserToOriginalUser(wecomUser *WecomUser) *Ori
 		Avatar:      wecomUser.Avatar,
 		Title:       wecomUser.Position,
 		Address:     []string{},
-		Properties:  map[string]string{},
+		Properties: map[string]string{
+			"wecom": wecomUser.UserId,
+		},
 		Groups:      []string{},
-		Wecom:       wecomUser.UserId, // Link WeCom provider account
 	}
 
 	// Set gender

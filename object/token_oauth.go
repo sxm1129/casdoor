@@ -1190,7 +1190,6 @@ func GetWechatMiniProgramToken(application *Application, code string, host strin
 			Name:              name,
 			Avatar:            avatar,
 			SignupApplication: application.Name,
-			WeChat:            openId,
 			Type:              "normal-user",
 			CreatedTime:       util.GetCurrentTime(),
 			IsAdmin:           false,
@@ -1204,6 +1203,30 @@ func GetWechatMiniProgramToken(application *Application, code string, host strin
 		_, err = AddUser(user, "en")
 		if err != nil {
 			return nil, nil, err
+		}
+
+		// Store WeChat identity in UserIdentity table
+		wechatIdentity := &UserIdentity{
+			Owner:        user.Owner,
+			Name:         user.Name,
+			ProviderType: "wechat",
+			ProviderId:   openId,
+		}
+		_, err = ormer.Engine.Insert(wechatIdentity)
+		if err != nil {
+			return nil, nil, err
+		}
+		if unionId != "" && unionId != openId {
+			unionIdentity := &UserIdentity{
+				Owner:        user.Owner,
+				Name:         user.Name,
+				ProviderType: "wechat",
+				ProviderId:   unionId,
+			}
+			_, err = ormer.Engine.Insert(unionIdentity)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 	}
 
