@@ -224,6 +224,12 @@ func AddRoles(roles []*Role) bool {
 			panic(err)
 		}
 	}
+	// AUDIT R2: parallel path fix — sync user_role mappings for batch insert
+	if affected != 0 {
+		for _, role := range roles {
+			_ = syncRoleUserMappings(role)
+		}
+	}
 	return affected != 0
 }
 
