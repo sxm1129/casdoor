@@ -149,6 +149,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 	}
 
 	if form.Type == ResponseTypeLogin {
+		_ = c.SessionRegenerateID()
 		c.SetSessionUsername(userId)
 		util.LogInfo(c.Ctx, "API: [%s] signed in", userId)
 		resp = &Response{Status: "ok", Msg: "", Data: userId, Data3: user.NeedUpdatePassword}
@@ -190,6 +191,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 		resp.Data3 = user.NeedUpdatePassword
 		if application.EnableSigninSession || application.HasPromptPage() {
 			// The prompt page needs the user to be signed in
+			_ = c.SessionRegenerateID()
 			c.SetSessionUsername(userId)
 		}
 	} else if form.Type == ResponseTypeToken || form.Type == ResponseTypeIdToken { // implicit flow
@@ -244,6 +246,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 
 		if application.EnableSigninSession || application.HasPromptPage() {
 			// The prompt page needs the user to be signed in
+			_ = c.SessionRegenerateID()
 			c.SetSessionUsername(userId)
 		}
 	} else if form.Type == ResponseTypeCas {
@@ -261,6 +264,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 
 		if application.EnableSigninSession || application.HasPromptPage() {
 			// The prompt page needs the user to be signed in
+			_ = c.SessionRegenerateID()
 			c.SetSessionUsername(userId)
 		}
 	} else {
