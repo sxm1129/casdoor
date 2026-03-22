@@ -1190,7 +1190,6 @@ func GetWechatMiniProgramToken(application *Application, code string, host strin
 			Name:              name,
 			Avatar:            avatar,
 			SignupApplication: application.Name,
-			WeChat:            openId,
 			Type:              "normal-user",
 			CreatedTime:       util.GetCurrentTime(),
 			IsAdmin:           false,
@@ -1204,6 +1203,18 @@ func GetWechatMiniProgramToken(application *Application, code string, host strin
 		_, err = AddUser(user, "en")
 		if err != nil {
 			return nil, nil, err
+		}
+
+		// AUDIT BUG-04 fix: use upsert to prevent duplicates on repeated login
+		err = UpdateUserIdentity(user.Owner, user.Name, "wechat", openId, "")
+		if err != nil {
+			return nil, nil, err
+		}
+		if unionId != "" && unionId != openId {
+			err = UpdateUserIdentity(user.Owner, user.Name, "wechat", unionId, "")
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 	}
 

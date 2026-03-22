@@ -105,9 +105,9 @@ func CorsFilter(ctx *context.Context) {
 		}
 	}
 
+	// AUDIT R7-B1 fix: removed wildcard OPTIONS handler that bypassed origin check
+	// Without an Origin header, CORS headers are not needed (same-origin request)
 	if ctx.Input.Method() == "OPTIONS" {
-		ctx.Output.Header(headerAllowOrigin, "*")
-		ctx.Output.Header(headerAllowMethods, "POST, GET, OPTIONS, DELETE")
 		ctx.ResponseWriter.WriteHeader(http.StatusOK)
 		return
 	}

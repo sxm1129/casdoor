@@ -200,6 +200,14 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 		if err != nil {
 			return false, err
 		}
+
+		// Sync mapping tables
+		if err := syncPermissionUserMappings(permission); err != nil {
+			return false, err
+		}
+		if err := syncPermissionRoleMappings(permission); err != nil {
+			return false, err
+		}
 	}
 
 	return affected != 0, nil
@@ -219,6 +227,14 @@ func AddPermission(permission *Permission) (bool, error) {
 
 		err = addPolicies(permission)
 		if err != nil {
+			return false, err
+		}
+
+		// Sync mapping tables
+		if err := syncPermissionUserMappings(permission); err != nil {
+			return false, err
+		}
+		if err := syncPermissionRoleMappings(permission); err != nil {
 			return false, err
 		}
 	}
@@ -248,6 +264,14 @@ func AddPermissions(permissions []*Permission) (bool, error) {
 
 			err = addPolicies(permission)
 			if err != nil {
+				return false, err
+			}
+
+			// AUDIT BUG-05 fix: sync mapping tables for batch insert
+			if err := syncPermissionUserMappings(permission); err != nil {
+				return false, err
+			}
+			if err := syncPermissionRoleMappings(permission); err != nil {
 				return false, err
 			}
 		}
@@ -312,15 +336,10 @@ func DeletePermission(permission *Permission) (bool, error) {
 			return false, err
 		}
 
-		// if permission.Adapter != "" && permission.Adapter != "permission_rule" {
-		// 	isEmpty, _ := ormer.Engine.IsTableEmpty(permission.Adapter)
-		// 	if isEmpty {
-		// 		err = ormer.Engine.DropTables(permission.Adapter)
-		// 		if err != nil {
-		// 			return false, err
-		// 		}
-		// 	}
-		// }
+		// Clean up mapping tables
+		if err := deletePermissionMappings(permission.GetId()); err != nil {
+			return false, err
+		}
 	}
 
 	return affected, nil
@@ -328,36 +347,28 @@ func DeletePermission(permission *Permission) (bool, error) {
 
 func getPermissionsByUser(userId string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&permissions)
+	err := ormer.Engine.Alias("p").
+		Join("INNER", "user_permission up", "up.permission = p.owner || '/' || p.name").
+		Where("up.user = ?", userId).
+		Find(&permissions)
 	if err != nil {
 		return permissions, err
 	}
 
-	res := []*Permission{}
-	for _, permission := range permissions {
-		if util.InSlice(permission.Users, userId) {
-			res = append(res, permission)
-		}
-	}
-
-	return res, nil
+	return permissions, nil
 }
 
 func GetPermissionsByRole(roleId string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Where("roles like ?", "%"+roleId+"\"%").Find(&permissions)
+	err := ormer.Engine.Alias("p").
+		Join("INNER", "role_permission rp", "rp.permission = p.owner || '/' || p.name").
+		Where("rp.role = ?", roleId).
+		Find(&permissions)
 	if err != nil {
 		return permissions, err
 	}
 
-	res := []*Permission{}
-	for _, permission := range permissions {
-		if util.InSlice(permission.Roles, roleId) {
-			res = append(res, permission)
-		}
-	}
-
-	return res, nil
+	return permissions, nil
 }
 
 func GetPermissionsByResource(resourceId string) ([]*Permission, error) {

@@ -437,9 +437,10 @@ func (p *DingtalkSyncerProvider) getDingtalkUserFieldValue(dingtalkUser *Dingtal
 func (p *DingtalkSyncerProvider) dingtalkUserToOriginalUser(dingtalkUser *DingtalkUser) *OriginalUser {
 	user := &OriginalUser{
 		Address:    []string{},
-		Properties: map[string]string{},
+		Properties: map[string]string{
+			"dingtalk": dingtalkUser.UserId,
+		},
 		Groups:     []string{},
-		DingTalk:   dingtalkUser.UserId, // Link DingTalk provider account
 	}
 
 	// Apply TableColumns mapping if configured

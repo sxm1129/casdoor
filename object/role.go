@@ -143,6 +143,13 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, err
 	}
 
+	// Sync user_role mapping table
+	if affected != 0 {
+		if err := syncRoleUserMappings(role); err != nil {
+			return false, err
+		}
+	}
+
 	visited = map[string]struct{}{}
 	newRoleID := role.GetId()
 	permissions, err = GetPermissionsByRole(newRoleID)
@@ -197,6 +204,13 @@ func AddRole(role *Role) (bool, error) {
 		return false, err
 	}
 
+	// Sync user_role mapping table
+	if affected != 0 {
+		if err := syncRoleUserMappings(role); err != nil {
+			return false, err
+		}
+	}
+
 	return affected != 0, nil
 }
 
@@ -208,6 +222,12 @@ func AddRoles(roles []*Role) bool {
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
 			panic(err)
+		}
+	}
+	// AUDIT R2: parallel path fix — sync user_role mappings for batch insert
+	if affected != 0 {
+		for _, role := range roles {
+			_ = syncRoleUserMappings(role)
 		}
 	}
 	return affected != 0
@@ -262,6 +282,11 @@ func DeleteRole(role *Role) (bool, error) {
 		}
 	}
 
+	// Clean up user_role mappings
+	if err := deleteRoleUserMappings(roleId); err != nil {
+		return false, err
+	}
+
 	return deleteRole(role)
 }
 
@@ -278,20 +303,55 @@ func getRolesByUserInternal(userId string) ([]*Role, error) {
 		return nil, fmt.Errorf("The user: %s doesn't exist", userId)
 	}
 
-	query := ormer.Engine.Alias("r").Where("r.users like ?", fmt.Sprintf("%%%s%%", userId))
-	for _, group := range user.Groups {
-		query = query.Or("r.groups like ?", fmt.Sprintf("%%%s%%", group))
-	}
-
-	roles := []*Role{}
-	err = query.Find(&roles)
+	// Use JOIN on user_role mapping table instead of LIKE full-table scan
+	rolesByUser := []*Role{}
+	err = ormer.Engine.Alias("r").
+		Join("INNER", "user_role ur", "ur.role = r.owner || '/' || r.name").
+		Where("ur.user = ?", userId).
+		Find(&rolesByUser)
 	if err != nil {
 		return nil, err
 	}
 
+	// Groups still use LIKE (small cardinality, acceptable)
+	rolesByGroup := []*Role{}
+	if len(user.Groups) > 0 {
+		groupQuery := ormer.Engine.Alias("r")
+		for i, group := range user.Groups {
+			if i == 0 {
+				groupQuery = groupQuery.Where("r.groups like ?", fmt.Sprintf("%%%s%%", group))
+			} else {
+				groupQuery = groupQuery.Or("r.groups like ?", fmt.Sprintf("%%%s%%", group))
+			}
+		}
+		err = groupQuery.Find(&rolesByGroup)
+		if err != nil {
+			return nil, err
+		}
+		// Verify group matches in memory (LIKE may over-match)
+		verified := []*Role{}
+		for _, role := range rolesByGroup {
+			if util.HaveIntersection(role.Groups, user.Groups) {
+				verified = append(verified, role)
+			}
+		}
+		rolesByGroup = verified
+	}
+
+	// Merge and deduplicate
+	seen := map[string]bool{}
 	res := []*Role{}
-	for _, role := range roles {
-		if util.InSlice(role.Users, userId) || util.HaveIntersection(role.Groups, user.Groups) {
+	for _, role := range rolesByUser {
+		id := role.GetId()
+		if !seen[id] {
+			seen[id] = true
+			res = append(res, role)
+		}
+	}
+	for _, role := range rolesByGroup {
+		id := role.GetId()
+		if !seen[id] {
+			seen[id] = true
 			res = append(res, role)
 		}
 	}

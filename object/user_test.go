@@ -38,11 +38,22 @@ func TestSyncAvatarsFromGitHub(t *testing.T) {
 
 	users, _ := GetGlobalUsers()
 	for _, user := range users {
-		if user.GitHub == "" {
+		identities, err := GetUserIdentitiesByUser(user.Owner, user.Name)
+		if err != nil {
+			continue
+		}
+		githubId := ""
+		for _, identity := range identities {
+			if identity.ProviderType == "github" {
+				githubId = identity.ProviderId
+				break
+			}
+		}
+		if githubId == "" {
 			continue
 		}
 
-		user.Avatar = fmt.Sprintf("https://avatars.githubusercontent.com/%s", user.GitHub)
+		user.Avatar = fmt.Sprintf("https://avatars.githubusercontent.com/%s", githubId)
 		updateUserColumn("avatar", user)
 	}
 }
@@ -105,7 +116,7 @@ func TestGetMaskedUsers(t *testing.T) {
 func TestGetUserByField(t *testing.T) {
 	InitConfig()
 
-	user, _ := GetUserByField("built-in", "DingTalk", "test")
+	user, _ := GetUserByField("built-in", "email", "test@example.com")
 	if user != nil {
 		t.Logf("%+v", user)
 	} else {

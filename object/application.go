@@ -454,7 +454,7 @@ func GetApplicationByOrganizationName(organization string) (*Application, error)
 	application := Application{}
 	existed, err := ormer.Engine.Where("organization=?", organization).Get(&application)
 	if err != nil {
-		return nil, nil
+		return nil, err // AUDIT R8-B1 fix: propagate DB error instead of swallowing
 	}
 
 	if existed {
@@ -739,7 +739,7 @@ func UpdateApplication(id string, application *Application, isGlobalAdmin bool, 
 	}
 
 	if oldApplication.ClientId != application.ClientId && applicationByClientId != nil {
-		return false, err
+		return false, fmt.Errorf("client_id: %s is already used by another application", application.ClientId) // AUDIT R8-B2 fix: descriptive error
 	}
 
 	if application.IsShared == true && application.Organization != "built-in" {
@@ -822,7 +822,7 @@ func AddApplication(application *Application) (bool, error) {
 
 	affected, err := ormer.Engine.Insert(application)
 	if err != nil {
-		return false, nil
+		return false, err // AUDIT R8-B3 fix: propagate insert error instead of swallowing
 	}
 
 	return affected != 0, nil

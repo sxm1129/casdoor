@@ -17,6 +17,7 @@ package object
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
@@ -317,10 +318,14 @@ func GetGroupUserCount(groupId string, field, value string) (int64, error) {
 	if field == "" && value == "" {
 		return int64(len(names)), nil
 	} else {
+		if field != "" && !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(field) {
+			return 0, fmt.Errorf("invalid field: %s", field)
+		}
 		tableNamePrefix := conf.GetConfigString("tableNamePrefix")
-		return ormer.Engine.Table(tableNamePrefix+"user").
+		prefixedUserTable := tableNamePrefix + "user"
+		return ormer.Engine.Table(prefixedUserTable).
 			Where("owner = ?", owner).In("name", names).
-			And(fmt.Sprintf("user.%s like ?", util.CamelToSnakeCase(field)), "%"+value+"%").
+			And(fmt.Sprintf("%s.%s like ?", prefixedUserTable, util.CamelToSnakeCase(field)), "%"+value+"%").
 			Count()
 	}
 }
@@ -346,6 +351,9 @@ func GetPaginationGroupUsers(groupId string, offset, limit int, field, value, so
 	}
 
 	if field != "" && value != "" {
+		if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(field) {
+			return nil, fmt.Errorf("invalid field: %s", field)
+		}
 		session = session.And(fmt.Sprintf("%s.%s like ?", prefixedUserTable, util.CamelToSnakeCase(field)), "%"+value+"%")
 	}
 

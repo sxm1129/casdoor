@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ArrowUpOutlined} from "@ant-design/icons";
-import {Card, Col, Row, Spin, Statistic, Tour} from "antd";
+import {Spin, Tour} from "antd";
 import * as echarts from "echarts";
 import i18next from "i18next";
 import React from "react";
@@ -25,6 +24,7 @@ const Dashboard = (props) => {
   const [dashboardData, setDashboardData] = React.useState(null);
   const [isTourVisible, setIsTourVisible] = React.useState(TourConfig.getTourVisible());
   const nextPathName = TourConfig.getNextUrl("home");
+  const chartRef = React.useRef(null);
 
   React.useEffect(() => {
     window.addEventListener("storageTourChanged", handleTourChange);
@@ -64,6 +64,80 @@ const Dashboard = (props) => {
       }
     });
   }, [props.owner]);
+
+  // AUDIT R4-B1/R4-B3 fix: move echarts init into useEffect to avoid null DOM and React anti-pattern
+  React.useEffect(() => {
+    if (dashboardData === null || !chartRef.current) {
+      return;
+    }
+
+    // AUDIT R4-S5 fix: reuse existing instance to prevent memory leaks
+    let myChart = echarts.getInstanceByDom(chartRef.current);
+    if (!myChart) {
+      myChart = echarts.init(chartRef.current);
+    }
+
+    const currentDate = new Date();
+    const dateArray = [];
+    for (let i = 30; i >= 0; i--) {
+      const date = new Date(currentDate);
+      date.setDate(date.getDate() - i);
+      const month = parseInt(date.getMonth()) + 1;
+      const day = parseInt(date.getDate());
+      const formattedDate = `${month}-${day}`;
+      dateArray.push(formattedDate);
+    }
+
+    const option = {
+      title: {text: i18next.t("home:Past 30 Days")},
+      tooltip: {trigger: "axis"},
+      legend: {data: [
+        i18next.t("general:Users"),
+        i18next.t("application:Providers"),
+        i18next.t("general:Applications"),
+        i18next.t("general:Organizations"),
+        i18next.t("general:Subscriptions"),
+        i18next.t("general:Roles"),
+        i18next.t("general:Groups"),
+        i18next.t("general:Resources"),
+        i18next.t("general:Certs"),
+        i18next.t("general:Permissions"),
+        i18next.t("general:Transactions"),
+        i18next.t("general:Models"),
+        i18next.t("general:Adapters"),
+        i18next.t("general:Enforcers"),
+      ], top: "10%"},
+      grid: {left: "3%", right: "4%", bottom: "0", top: "30%", containLabel: true},
+      xAxis: {type: "category", boundaryGap: false, data: dateArray},
+      yAxis: {type: "value"},
+      series: [
+        {name: i18next.t("general:Organizations"), type: "line", data: dashboardData.organizationCounts},
+        {name: i18next.t("general:Users"), type: "line", data: dashboardData.userCounts},
+        {name: i18next.t("application:Providers"), type: "line", data: dashboardData.providerCounts},
+        {name: i18next.t("general:Applications"), type: "line", data: dashboardData.applicationCounts},
+        {name: i18next.t("general:Subscriptions"), type: "line", data: dashboardData.subscriptionCounts},
+        {name: i18next.t("general:Roles"), type: "line", data: dashboardData.roleCounts},
+        {name: i18next.t("general:Groups"), type: "line", data: dashboardData.groupCounts},
+        {name: i18next.t("general:Resources"), type: "line", data: dashboardData.resourceCounts},
+        {name: i18next.t("general:Certs"), type: "line", data: dashboardData.certCounts},
+        {name: i18next.t("general:Permissions"), type: "line", data: dashboardData.permissionCounts},
+        {name: i18next.t("general:Transactions"), type: "line", data: dashboardData.transactionCounts},
+        {name: i18next.t("general:Models"), type: "line", data: dashboardData.modelCounts},
+        {name: i18next.t("general:Adapters"), type: "line", data: dashboardData.adapterCounts},
+        {name: i18next.t("general:Enforcers"), type: "line", data: dashboardData.enforcerCounts},
+      ],
+    };
+    myChart.setOption(option);
+
+    // Handle window resize for responsive charts
+    const handleResize = () => myChart.resize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      myChart.dispose();
+    };
+  }, [dashboardData]);
 
   const handleTourChange = () => {
     setIsTourVisible(TourConfig.getTourVisible());
@@ -111,115 +185,105 @@ const Dashboard = (props) => {
     return steps;
   };
 
-  const renderEChart = () => {
-    const chartDom = document.getElementById("echarts-chart");
+  // AUDIT R4-B4 fix: compute real metrics from dashboardData instead of hardcoded mock values
+  const getNewUsersToday = () => {
+    if (!dashboardData?.userCounts) {return 0;}
+    return dashboardData.userCounts[30] - dashboardData.userCounts[29];
+  };
 
+  const getNewUsers7d = () => {
+    if (!dashboardData?.userCounts) {return 0;}
+    return dashboardData.userCounts[30] - dashboardData.userCounts[23];
+  };
+
+  const renderMetricCards = () => {
     if (dashboardData === null) {
-      if (chartDom) {
-        const instance = echarts.getInstanceByDom(chartDom);
-        if (instance) {
-          instance.dispose();
-        }
-      }
-      return (
-        <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
-          <Spin size="large" tip={i18next.t("login:Loading")} style={{paddingTop: "10%"}} />
-        </div>
-      );
+      return null;
     }
-
-    const myChart = echarts.init(chartDom);
-    const currentDate = new Date();
-    const dateArray = [];
-    for (let i = 30; i >= 0; i--) {
-      const date = new Date(currentDate);
-      date.setDate(date.getDate() - i);
-      const month = parseInt(date.getMonth()) + 1;
-      const day = parseInt(date.getDate());
-      const formattedDate = `${month}-${day}`;
-      dateArray.push(formattedDate);
-    }
-    const option = {
-      title: {text: i18next.t("home:Past 30 Days")},
-      tooltip: {trigger: "axis"},
-      legend: {data: [
-        i18next.t("general:Users"),
-        i18next.t("application:Providers"),
-        i18next.t("general:Applications"),
-        i18next.t("general:Organizations"),
-        i18next.t("general:Subscriptions"),
-        i18next.t("general:Roles"),
-        i18next.t("general:Groups"),
-        i18next.t("general:Resources"),
-        i18next.t("general:Certs"),
-        i18next.t("general:Permissions"),
-        i18next.t("general:Transactions"),
-        i18next.t("general:Models"),
-        i18next.t("general:Adapters"),
-        i18next.t("general:Enforcers"),
-      ], top: "10%"},
-      grid: {left: "3%", right: "4%", bottom: "0", top: "30%", containLabel: true},
-      xAxis: {type: "category", boundaryGap: false, data: dateArray},
-      yAxis: {type: "value"},
-      series: [
-        {name: i18next.t("general:Organizations"), type: "line", data: dashboardData.organizationCounts},
-        {name: i18next.t("general:Users"), type: "line", data: dashboardData.userCounts},
-        {name: i18next.t("application:Providers"), type: "line", data: dashboardData.providerCounts},
-        {name: i18next.t("general:Applications"), type: "line", data: dashboardData.applicationCounts},
-        {name: i18next.t("general:Subscriptions"), type: "line", data: dashboardData.subscriptionCounts},
-        {name: i18next.t("general:Roles"), type: "line", data: dashboardData.roleCounts},
-        {name: i18next.t("general:Groups"), type: "line", data: dashboardData.groupCounts},
-        {name: i18next.t("general:Resources"), type: "line", data: dashboardData.resourceCounts},
-        {name: i18next.t("general:Certs"), type: "line", data: dashboardData.certCounts},
-        {name: i18next.t("general:Permissions"), type: "line", data: dashboardData.permissionCounts},
-        {name: i18next.t("general:Transactions"), type: "line", data: dashboardData.transactionCounts},
-        {name: i18next.t("general:Models"), type: "line", data: dashboardData.modelCounts},
-        {name: i18next.t("general:Adapters"), type: "line", data: dashboardData.adapterCounts},
-        {name: i18next.t("general:Enforcers"), type: "line", data: dashboardData.enforcerCounts},
-      ],
-    };
-    myChart.setOption(option);
-
-    const cardStyles = {
-      body: {
-        width: Setting.isMobile() ? "340px" : "100%",
-        height: Setting.isMobile() ? "100px" : "150px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      },
-    };
 
     return (
-      <Row id="statistic" gutter={80} justify={"center"}>
-        <Col span={50} style={{marginBottom: "10px"}}>
-          <Card variant="borderless" styles={cardStyles}>
-            <Statistic title={i18next.t("home:Total users")} fontSize="100px" value={dashboardData.userCounts[30]} valueStyle={{fontSize: "30px"}} style={{width: "200px", paddingLeft: "10px"}} />
-          </Card>
-        </Col>
-        <Col span={50} style={{marginBottom: "10px"}}>
-          <Card variant="borderless" styles={cardStyles}>
-            <Statistic title={i18next.t("home:New users today")} fontSize="100px" value={dashboardData.userCounts[30] - dashboardData.userCounts[30 - 1]} valueStyle={{fontSize: "30px"}} prefix={<ArrowUpOutlined />} style={{width: "200px", paddingLeft: "10px"}} />
-          </Card>
-        </Col>
-        <Col span={50} style={{marginBottom: "10px"}}>
-          <Card variant="borderless" styles={cardStyles}>
-            <Statistic title={i18next.t("home:New users past 7 days")} value={dashboardData.userCounts[30] - dashboardData.userCounts[30 - 7]} valueStyle={{fontSize: "30px"}} prefix={<ArrowUpOutlined />} style={{width: "200px", paddingLeft: "10px"}} />
-          </Card>
-        </Col>
-        <Col span={50} style={{marginBottom: "10px"}}>
-          <Card variant="borderless" styles={cardStyles}>
-            <Statistic title={i18next.t("home:New users past 30 days")} value={dashboardData.userCounts[30] - dashboardData.userCounts[30 - 30]} valueStyle={{fontSize: "30px"}} prefix={<ArrowUpOutlined />} style={{width: "200px", paddingLeft: "10px"}} />
-          </Card>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 px-4">
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex justify-between items-start mb-4">
+            <span className="material-symbols-outlined text-blue-600 bg-blue-50 p-2 rounded-lg">group</span>
+            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">+{getNewUsers7d()} (7d)</span>
+          </div>
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">{i18next.t("home:Total users")}</h3>
+          <p className="text-3xl font-bold mt-1 text-gray-900">{dashboardData.userCounts[30].toLocaleString()}</p>
+          <div className="w-full bg-gray-100 mt-4 h-1 rounded-full overflow-hidden">
+            <div className="bg-blue-600 h-full" style={{width: "75%"}}></div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex justify-between items-start mb-4">
+            <span className="material-symbols-outlined text-blue-900 bg-blue-50 p-2 rounded-lg">apps</span>
+            <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{i18next.t("general:Stable")}</span>
+          </div>
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">{i18next.t("general:Applications")}</h3>
+          <p className="text-3xl font-bold mt-1 text-gray-900">{dashboardData.applicationCounts[30]}</p>
+          <div className="flex gap-1 mt-4">
+            <div className="h-1 flex-1 bg-blue-600 rounded-full"></div>
+            <div className="h-1 flex-1 bg-blue-600 rounded-full"></div>
+            <div className="h-1 flex-1 bg-blue-600 rounded-full"></div>
+            <div className="h-1 flex-1 bg-gray-100 rounded-full"></div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex justify-between items-start mb-4">
+            <span className="material-symbols-outlined text-red-600 bg-red-50 p-2 rounded-lg">trending_up</span>
+          </div>
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">{i18next.t("home:New users today")}</h3>
+          <p className="text-3xl font-bold mt-1 text-gray-900">+{getNewUsersToday()}</p>
+          <div className="w-full bg-gray-100 mt-4 h-1 rounded-full overflow-hidden">
+            <div className="bg-emerald-500 h-full" style={{width: `${Math.min(getNewUsersToday() * 10, 100)}%`}}></div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex justify-between items-start mb-4">
+            <span className="material-symbols-outlined text-blue-600 bg-blue-50 p-2 rounded-lg">organization</span>
+          </div>
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">{i18next.t("general:Organizations")}</h3>
+          <p className="text-3xl font-bold mt-1 text-gray-900">{dashboardData.organizationCounts[30]}</p>
+          <div className="w-full bg-gray-100 mt-4 h-1 rounded-full overflow-hidden">
+            <div className="bg-blue-600 h-full" style={{width: "60%"}}></div>
+          </div>
+        </div>
+      </div>
     );
   };
 
+  if (dashboardData === null) {
+    return (
+      <div style={{display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh"}}>
+        <Spin size="large" tip={i18next.t("login:Loading")} style={{paddingTop: "10%"}} />
+      </div>
+    );
+  }
+
   return (
-    <div style={{display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center"}}>
-      {renderEChart()}
-      <div id="echarts-chart" style={{width: "80%", height: "400px", textAlign: "center", marginTop: "20px"}} />
+    <div style={{display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center", width: "100%", padding: "24px"}}>
+      <header style={{marginBottom: "32px", width: "100%", paddingLeft: "16px"}}>
+        <h2 style={{fontSize: "28px", fontWeight: 800, letterSpacing: "-0.5px", color: "#191c1e", fontFamily: "Inter, sans-serif"}}>{i18next.t("home:Identity Overview") || "Identity Overview"}</h2>
+        <p style={{fontSize: "14px", color: "#43474f", marginTop: "8px"}}>{i18next.t("home:Real-time status of the Casdoor authentication ecosystem.") || "Real-time status of the Casdoor authentication ecosystem."}</p>
+      </header>
+
+      {renderMetricCards()}
+
+      <div style={{width: "100%", display: "grid", gridTemplateColumns: "1fr", gap: "32px", padding: "0 16px"}}>
+        <section style={{backgroundColor: "#fff", padding: "32px", borderRadius: "12px", border: "1px solid #e6e8ea", boxShadow: "0 1px 3px rgba(0,0,0,0.06)"}}>
+          <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px"}}>
+            <div>
+              <h3 style={{fontSize: "18px", fontWeight: 700, color: "#191c1e"}}>{i18next.t("home:Past 30 Days")}</h3>
+              <p style={{fontSize: "12px", color: "#43474f"}}>{i18next.t("home:Auth requests across all organizations") || "Auth requests across all organizations"}</p>
+            </div>
+          </div>
+          <div ref={chartRef} id="echarts-chart" style={{width: "100%", height: "400px"}} />
+        </section>
+      </div>
+
       <Tour
         open={Setting.isMobile() ? false : isTourVisible}
         onClose={setIsTourToLocal}

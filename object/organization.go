@@ -19,7 +19,6 @@ import (
 	"strconv"
 
 	"github.com/casdoor/casdoor/conf"
-	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/builder"
@@ -241,13 +240,8 @@ func UpdateOrganization(id string, organization *Organization, isGlobalAdmin boo
 		}
 	}
 
-	if organization.MasterPassword != "" && organization.MasterPassword != "***" {
-		credManager := cred.GetCredManager(organization.PasswordType)
-		if credManager != nil {
-			hashedPassword := credManager.GetHashedPassword(organization.MasterPassword, organization.PasswordSalt)
-			organization.MasterPassword = hashedPassword
-		}
-	}
+	// MasterPassword feature is disabled for security reasons
+	organization.MasterPassword = ""
 
 	if !isGlobalAdmin {
 		organization.NavItems = org.NavItems

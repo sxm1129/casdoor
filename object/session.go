@@ -18,8 +18,10 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strconv"
 
 	"github.com/beego/beego/v2/server/web"
+	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
 )
@@ -126,8 +128,12 @@ func UpdateSession(id string, session *Session) (bool, error) {
 }
 
 func removeExtraSessionIds(session *Session) {
-	if len(session.SessionId) > 100 {
-		session.SessionId = session.SessionId[(len(session.SessionId) - 100):]
+	limit, _ := strconv.Atoi(conf.GetConfigString("sessionLimit"))
+	if limit <= 0 {
+		limit = 1000
+	}
+	if len(session.SessionId) > limit {
+		session.SessionId = session.SessionId[(len(session.SessionId) - limit):]
 	}
 }
 
@@ -231,7 +237,8 @@ func DeleteBeegoSession(sessionIds []string) {
 	for _, sessionId := range sessionIds {
 		err := web.GlobalSessions.GetProvider().SessionDestroy(context.Background(), sessionId)
 		if err != nil {
-			return
+			// AUDIT R5-B3 fix: continue destroying remaining sessions instead of aborting
+			continue
 		}
 	}
 }

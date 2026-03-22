@@ -92,6 +92,7 @@ func AutoSigninFilter(ctx *context.Context) {
 		userId, err := getUsernameByKeys(ctx)
 		if err != nil {
 			responseError(ctx, err.Error())
+			return // AUDIT R7-B2 fix: must return after error
 		}
 
 		setSessionUser(ctx, userId)

@@ -21,7 +21,9 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/beego/beego/v2/server/web"
 	"github.com/casdoor/casdoor/conf"
@@ -127,6 +129,11 @@ func CreateTables() {
 	}
 
 	ormer.createTable()
+
+	err := RunMigration()
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Ormer represents the MySQL adapter for policy storage.
@@ -267,6 +274,22 @@ func (a *Ormer) open() error {
 	}
 
 	a.Engine = engine
+
+	maxOpenConns, _ := strconv.Atoi(conf.GetConfigString("dbMaxOpenConns"))
+	if maxOpenConns > 0 {
+		a.Engine.SetMaxOpenConns(maxOpenConns)
+	}
+
+	maxIdleConns, _ := strconv.Atoi(conf.GetConfigString("dbMaxIdleConns"))
+	if maxIdleConns > 0 {
+		a.Engine.SetMaxIdleConns(maxIdleConns)
+	}
+
+	connMaxLifetime, _ := strconv.Atoi(conf.GetConfigString("dbConnMaxLifetimeSeconds"))
+	if connMaxLifetime > 0 {
+		a.Engine.SetConnMaxLifetime(time.Duration(connMaxLifetime) * time.Second)
+	}
+
 	return nil
 }
 
@@ -354,6 +377,26 @@ func (a *Ormer) createTable() {
 	}
 
 	err = a.Engine.Sync2(new(Model))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(UserIdentity))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(UserRole))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(RolePermission))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(UserPermission))
 	if err != nil {
 		panic(err)
 	}

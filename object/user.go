@@ -119,94 +119,7 @@ type User struct {
 	LastSigninTime string `xorm:"varchar(100)" json:"lastSigninTime"`
 	LastSigninIp   string `xorm:"varchar(100)" json:"lastSigninIp"`
 
-	GitHub          string `xorm:"github varchar(100)" json:"github"`
-	Google          string `xorm:"varchar(100)" json:"google"`
-	QQ              string `xorm:"qq varchar(100)" json:"qq"`
-	WeChat          string `xorm:"wechat varchar(100)" json:"wechat"`
-	Facebook        string `xorm:"facebook varchar(100)" json:"facebook"`
-	DingTalk        string `xorm:"dingtalk varchar(100)" json:"dingtalk"`
-	Weibo           string `xorm:"weibo varchar(100)" json:"weibo"`
-	Gitee           string `xorm:"gitee varchar(100)" json:"gitee"`
-	LinkedIn        string `xorm:"linkedin varchar(100)" json:"linkedin"`
-	Wecom           string `xorm:"wecom varchar(100)" json:"wecom"`
-	Lark            string `xorm:"lark varchar(100)" json:"lark"`
-	Gitlab          string `xorm:"gitlab varchar(100)" json:"gitlab"`
-	Adfs            string `xorm:"adfs varchar(100)" json:"adfs"`
-	Baidu           string `xorm:"baidu varchar(100)" json:"baidu"`
-	Alipay          string `xorm:"alipay varchar(100)" json:"alipay"`
-	Casdoor         string `xorm:"casdoor varchar(100)" json:"casdoor"`
-	Infoflow        string `xorm:"infoflow varchar(100)" json:"infoflow"`
-	Apple           string `xorm:"apple varchar(100)" json:"apple"`
-	AzureAD         string `xorm:"azuread varchar(100)" json:"azuread"`
-	AzureADB2c      string `xorm:"azureadb2c varchar(100)" json:"azureadb2c"`
-	Slack           string `xorm:"slack varchar(100)" json:"slack"`
-	Steam           string `xorm:"steam varchar(100)" json:"steam"`
-	Bilibili        string `xorm:"bilibili varchar(100)" json:"bilibili"`
-	Okta            string `xorm:"okta varchar(100)" json:"okta"`
-	Douyin          string `xorm:"douyin varchar(100)" json:"douyin"`
-	Kwai            string `xorm:"kwai varchar(100)" json:"kwai"`
-	Line            string `xorm:"line varchar(100)" json:"line"`
-	Amazon          string `xorm:"amazon varchar(100)" json:"amazon"`
-	Auth0           string `xorm:"auth0 varchar(100)" json:"auth0"`
-	BattleNet       string `xorm:"battlenet varchar(100)" json:"battlenet"`
-	Bitbucket       string `xorm:"bitbucket varchar(100)" json:"bitbucket"`
-	Box             string `xorm:"box varchar(100)" json:"box"`
-	CloudFoundry    string `xorm:"cloudfoundry varchar(100)" json:"cloudfoundry"`
-	Dailymotion     string `xorm:"dailymotion varchar(100)" json:"dailymotion"`
-	Deezer          string `xorm:"deezer varchar(100)" json:"deezer"`
-	DigitalOcean    string `xorm:"digitalocean varchar(100)" json:"digitalocean"`
-	Discord         string `xorm:"discord varchar(100)" json:"discord"`
-	Dropbox         string `xorm:"dropbox varchar(100)" json:"dropbox"`
-	EveOnline       string `xorm:"eveonline varchar(100)" json:"eveonline"`
-	Fitbit          string `xorm:"fitbit varchar(100)" json:"fitbit"`
-	Gitea           string `xorm:"gitea varchar(100)" json:"gitea"`
-	Heroku          string `xorm:"heroku varchar(100)" json:"heroku"`
-	InfluxCloud     string `xorm:"influxcloud varchar(100)" json:"influxcloud"`
-	Instagram       string `xorm:"instagram varchar(100)" json:"instagram"`
-	Intercom        string `xorm:"intercom varchar(100)" json:"intercom"`
-	Kakao           string `xorm:"kakao varchar(100)" json:"kakao"`
-	Lastfm          string `xorm:"lastfm varchar(100)" json:"lastfm"`
-	Mailru          string `xorm:"mailru varchar(100)" json:"mailru"`
-	Meetup          string `xorm:"meetup varchar(100)" json:"meetup"`
-	MicrosoftOnline string `xorm:"microsoftonline varchar(100)" json:"microsoftonline"`
-	Naver           string `xorm:"naver varchar(100)" json:"naver"`
-	Nextcloud       string `xorm:"nextcloud varchar(100)" json:"nextcloud"`
-	OneDrive        string `xorm:"onedrive varchar(100)" json:"onedrive"`
-	Oura            string `xorm:"oura varchar(100)" json:"oura"`
-	Patreon         string `xorm:"patreon varchar(100)" json:"patreon"`
-	Paypal          string `xorm:"paypal varchar(100)" json:"paypal"`
-	SalesForce      string `xorm:"salesforce varchar(100)" json:"salesforce"`
-	Shopify         string `xorm:"shopify varchar(100)" json:"shopify"`
-	Soundcloud      string `xorm:"soundcloud varchar(100)" json:"soundcloud"`
-	Spotify         string `xorm:"spotify varchar(100)" json:"spotify"`
-	Strava          string `xorm:"strava varchar(100)" json:"strava"`
-	Stripe          string `xorm:"stripe varchar(100)" json:"stripe"`
-	Telegram        string `xorm:"telegram varchar(100)" json:"telegram"`
-	TikTok          string `xorm:"tiktok varchar(100)" json:"tiktok"`
-	Tumblr          string `xorm:"tumblr varchar(100)" json:"tumblr"`
-	Twitch          string `xorm:"twitch varchar(100)" json:"twitch"`
-	Twitter         string `xorm:"twitter varchar(100)" json:"twitter"`
-	Typetalk        string `xorm:"typetalk varchar(100)" json:"typetalk"`
-	Uber            string `xorm:"uber varchar(100)" json:"uber"`
-	VK              string `xorm:"vk varchar(100)" json:"vk"`
-	Wepay           string `xorm:"wepay varchar(100)" json:"wepay"`
-	Xero            string `xorm:"xero varchar(100)" json:"xero"`
-	Yahoo           string `xorm:"yahoo varchar(100)" json:"yahoo"`
-	Yammer          string `xorm:"yammer varchar(100)" json:"yammer"`
-	Yandex          string `xorm:"yandex varchar(100)" json:"yandex"`
-	Zoom            string `xorm:"zoom varchar(100)" json:"zoom"`
-	MetaMask        string `xorm:"metamask varchar(100)" json:"metamask"`
-	Web3Onboard     string `xorm:"web3onboard varchar(100)" json:"web3onboard"`
-	Custom          string `xorm:"custom varchar(100)" json:"custom"`
-	Custom2         string `xorm:"custom2 text" json:"custom2"`
-	Custom3         string `xorm:"custom3 text" json:"custom3"`
-	Custom4         string `xorm:"custom4 text" json:"custom4"`
-	Custom5         string `xorm:"custom5 text" json:"custom5"`
-	Custom6         string `xorm:"custom6 text" json:"custom6"`
-	Custom7         string `xorm:"custom7 text" json:"custom7"`
-	Custom8         string `xorm:"custom8 text" json:"custom8"`
-	Custom9         string `xorm:"custom9 text" json:"custom9"`
-	Custom10        string `xorm:"custom10 text" json:"custom10"`
+	// 84+ IdP columns are removed. Fetch them from UserIdentity mapping table instead.
 
 	WebauthnCredentials []webauthn.Credential `xorm:"webauthnCredentials blob" json:"webauthnCredentials"`
 	PreferredMfaType    string                `xorm:"varchar(100)" json:"preferredMfaType"`
@@ -471,17 +384,35 @@ func getUserByWechatId(owner string, wechatOpenId string, wechatUnionId string) 
 	if wechatUnionId == "" {
 		wechatUnionId = wechatOpenId
 	}
-	user := &User{}
-	existed, err := ormer.Engine.Where("owner = ?", owner).Where("wechat = ? OR wechat = ?", wechatOpenId, wechatUnionId).Get(user)
+
+	// Try UnionID first via UserIdentity table
+	identity := UserIdentity{ProviderType: "wechat"}
+	existed := false
+	var err error
+
+	// Try wechatUnionId
+	identity.ProviderId = wechatUnionId
+	existed, err = ormer.Engine.Where("provider_type = ? AND provider_id = ? AND owner = ?", "wechat", wechatUnionId, owner).Get(&identity)
 	if err != nil {
 		return nil, err
 	}
-
 	if existed {
-		return user, nil
-	} else {
-		return nil, nil
+		return getUser(identity.Owner, identity.Name)
 	}
+
+	// Try wechatOpenId if different
+	if wechatOpenId != wechatUnionId {
+		identity2 := UserIdentity{}
+		existed, err = ormer.Engine.Where("provider_type = ? AND provider_id = ? AND owner = ?", "wechat", wechatOpenId, owner).Get(&identity2)
+		if err != nil {
+			return nil, err
+		}
+		if existed {
+			return getUser(identity2.Owner, identity2.Name)
+		}
+	}
+
+	return nil, nil
 }
 
 func GetUserByEmail(owner string, email string) (*User, error) {
@@ -866,13 +797,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 			"location", "address", "addresses", "country_code", "region", "language", "affiliation", "title", "id_card_type", "id_card", "homepage", "bio", "tag", "language", "gender", "birthday", "education", "score", "karma", "ranking", "signup_application", "register_type", "register_source",
 			"is_admin", "is_forbidden", "is_deleted", "hash", "is_default_avatar", "properties", "webauthnCredentials", "mfa_items", "last_change_password_time", "managedAccounts", "face_ids", "mfaAccounts",
 			"signin_wrong_times", "last_signin_wrong_time", "groups", "access_key", "access_secret", "mfa_phone_enabled", "mfa_email_enabled", "email_verified",
-			"github", "google", "qq", "wechat", "facebook", "dingtalk", "weibo", "gitee", "linkedin", "wecom", "lark", "gitlab", "adfs",
-			"baidu", "alipay", "casdoor", "infoflow", "apple", "azuread", "azureadb2c", "slack", "steam", "bilibili", "okta", "douyin", "kwai", "line", "amazon",
-			"auth0", "battlenet", "bitbucket", "box", "cloudfoundry", "dailymotion", "deezer", "digitalocean", "discord", "dropbox",
-			"eveonline", "fitbit", "gitea", "heroku", "influxcloud", "instagram", "intercom", "kakao", "lastfm", "mailru", "meetup",
-			"microsoftonline", "naver", "nextcloud", "onedrive", "oura", "patreon", "paypal", "salesforce", "shopify", "soundcloud",
-			"spotify", "strava", "stripe", "type", "telegram", "tiktok", "tumblr", "twitch", "twitter", "typetalk", "uber", "vk", "wepay", "xero", "yahoo",
-			"yammer", "yandex", "zoom", "custom", "need_update_password", "ip_whitelist", "mfa_remember_deadline",
+			"type", "need_update_password", "ip_whitelist", "mfa_remember_deadline",
 			"cart", "application_scopes",
 		}
 	}

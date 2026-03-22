@@ -115,19 +115,6 @@ type UserWithoutThirdIdp struct {
 	AccessKey         string   `xorm:"varchar(100)" json:"accessKey"`
 	AccessSecret      string   `xorm:"varchar(100)" json:"accessSecret"`
 
-	GitHub   string `xorm:"github varchar(100)" json:"github"`
-	Google   string `xorm:"varchar(100)" json:"google"`
-	QQ       string `xorm:"qq varchar(100)" json:"qq"`
-	WeChat   string `xorm:"wechat varchar(100)" json:"wechat"`
-	Facebook string `xorm:"facebook varchar(100)" json:"facebook"`
-	DingTalk string `xorm:"dingtalk varchar(100)" json:"dingtalk"`
-	Weibo    string `xorm:"weibo varchar(100)" json:"weibo"`
-	Gitee    string `xorm:"gitee varchar(100)" json:"gitee"`
-	LinkedIn string `xorm:"linkedin varchar(100)" json:"linkedin"`
-	Wecom    string `xorm:"wecom varchar(100)" json:"wecom"`
-	Lark     string `xorm:"lark varchar(100)" json:"lark"`
-	Gitlab   string `xorm:"gitlab varchar(100)" json:"gitlab"`
-
 	CreatedIp      string `xorm:"varchar(100)" json:"createdIp"`
 	LastSigninTime string `xorm:"varchar(100)" json:"lastSigninTime"`
 	LastSigninIp   string `xorm:"varchar(100)" json:"lastSigninIp"`
@@ -269,19 +256,6 @@ func getUserWithoutThirdIdp(user *User) *UserWithoutThirdIdp {
 		RegisterSource:    user.RegisterSource,
 		AccessKey:         user.AccessKey,
 		AccessSecret:      user.AccessSecret,
-
-		GitHub:   user.GitHub,
-		Google:   user.Google,
-		QQ:       user.QQ,
-		WeChat:   user.WeChat,
-		Facebook: user.Facebook,
-		DingTalk: user.DingTalk,
-		Weibo:    user.Weibo,
-		Gitee:    user.Gitee,
-		LinkedIn: user.LinkedIn,
-		Wecom:    user.Wecom,
-		Lark:     user.Lark,
-		Gitlab:   user.Gitlab,
 
 		CreatedIp:      user.CreatedIp,
 		LastSigninTime: user.LastSigninTime,
@@ -488,7 +462,15 @@ func getClaimsCustom(claims Claims, tokenField []string, tokenAttributes []*JwtI
 }
 
 func refineUser(user *User) *User {
+	// AUDIT R10-B1 fix: clear ALL sensitive fields before JWT embedding
+	// These fields must never appear in tokens as they are visible to bearers
 	user.Password = ""
+	user.PasswordSalt = ""
+	user.PasswordType = ""
+	user.AccessSecret = ""
+	user.TotpSecret = ""
+	user.RecoveryCodes = nil
+	user.MfaItems = nil
 
 	if user.Address == nil {
 		user.Address = []string{}
