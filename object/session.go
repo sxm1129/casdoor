@@ -237,7 +237,8 @@ func DeleteBeegoSession(sessionIds []string) {
 	for _, sessionId := range sessionIds {
 		err := web.GlobalSessions.GetProvider().SessionDestroy(context.Background(), sessionId)
 		if err != nil {
-			return
+			// AUDIT R5-B3 fix: continue destroying remaining sessions instead of aborting
+			continue
 		}
 	}
 }

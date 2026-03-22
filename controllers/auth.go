@@ -379,7 +379,11 @@ func (c *ApiController) GetApplicationLogin() {
 	}
 
 	clientIp := util.GetClientIpFromRequest(c.Ctx.Request)
-	object.CheckEntryIp(clientIp, nil, application, nil, c.GetAcceptLanguage())
+	// AUDIT R5-B1 fix: handle CheckEntryIp return values
+	if err := object.CheckEntryIp(clientIp, nil, application, nil, c.GetAcceptLanguage()); err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
 
 	application = object.GetMaskedApplication(application, "")
 	if msg != "" {
@@ -742,6 +746,7 @@ func (c *ApiController) Login() {
 			organization, err = object.GetOrganizationByUser(user)
 			if err != nil {
 				c.ResponseError(err.Error())
+				return // AUDIT R5-S1 fix: must return after error
 			}
 
 			if checkMfaEnable(c, user, organization, verificationType) {
@@ -857,6 +862,7 @@ func (c *ApiController) Login() {
 				}
 				if !reg.MatchString(userInfo.Email) {
 					c.ResponseError(c.T("check:Email is invalid"))
+					return // AUDIT R5-S2 fix: must return after error
 				}
 			}
 		}
@@ -1247,6 +1253,11 @@ func (c *ApiController) HandleSamlLogin() {
 		return
 	}
 	slice := strings.Split(string(decode), "&")
+	// AUDIT R5-B2 fix: bounds check to prevent index-out-of-range panic
+	if len(slice) < 5 {
+		c.ResponseError("invalid relayState format")
+		return
+	}
 	relayState = url.QueryEscape(relayState)
 	samlResponse = url.QueryEscape(samlResponse)
 	targetUrl := fmt.Sprintf("%s?relayState=%s&samlResponse=%s",
