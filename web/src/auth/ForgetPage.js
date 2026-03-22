@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from "react";
-import {Button, Col, Form, Input, Popover, Row, Select, Steps} from "antd";
+import {Button, Form, Input, Popover, Select, Steps} from "antd";
 import * as AuthBackend from "./AuthBackend";
 import * as ApplicationBackend from "../backend/ApplicationBackend";
 import * as Util from "./Util";

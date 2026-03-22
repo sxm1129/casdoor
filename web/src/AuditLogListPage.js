@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from "react";
-import {Table, Tag, Card, Input, Select, DatePicker, Space, Tooltip, Modal} from "antd";
-import {EyeOutlined, SearchOutlined} from "@ant-design/icons";
+import {Card, Input, Modal, Select, Space, Table, Tag, Tooltip} from "antd";
+import {EyeOutlined} from "@ant-design/icons";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 

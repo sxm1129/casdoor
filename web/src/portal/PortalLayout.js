@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from "react";
-import {Card, Tabs, Form, Input, Button, Avatar, Descriptions, Table, Tag, Spin, message, List, Space, Modal, Typography, Badge} from "antd";
-import {UserOutlined, LockOutlined, KeyOutlined, HistoryOutlined, ExclamationCircleOutlined, CheckCircleOutlined, CopyOutlined, DeleteOutlined, PlusOutlined} from "@ant-design/icons";
+import {Avatar, Badge, Button, Card, Form, Input, List, Modal, Space, Spin, Table, Tabs, Tag, Typography, message} from "antd";
+import {DeleteOutlined, ExclamationCircleOutlined, HistoryOutlined, KeyOutlined, LockOutlined, PlusOutlined, UserOutlined} from "@ant-design/icons";
 
 const {Text, Paragraph} = Typography;
 import * as Setting from "../Setting";

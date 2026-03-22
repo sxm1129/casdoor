@@ -13,13 +13,11 @@
 // limitations under the License.
 
 import React from "react";
-import {Button, Card, Input, Modal, Space, Table, Tag, Tooltip, Typography, message} from "antd";
+import {Button, Card, Input, Modal, Space, Table, Tag, Tooltip, message} from "antd";
 import {CopyOutlined, DeleteOutlined, KeyOutlined, PlusOutlined} from "@ant-design/icons";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 import copy from "copy-to-clipboard";
-
-const {Paragraph} = Typography;
 
 class ApiKeyListPage extends React.Component {
   constructor(props) {
@@ -235,7 +233,7 @@ class ApiKeyListPage extends React.Component {
           onCancel={() => this.setState({createdRawKey: null})}
           footer={[
             <Button key="copy" type="primary" icon={<CopyOutlined />}
-              onClick={() => { copy(this.state.createdRawKey); message.success("Copied!"); }}>
+              onClick={() => {copy(this.state.createdRawKey); message.success("Copied!");}}>
               {i18next.t("general:Copy")}
             </Button>,
             <Button key="close" onClick={() => this.setState({createdRawKey: null})}>
