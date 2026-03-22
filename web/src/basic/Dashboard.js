@@ -201,55 +201,74 @@ const Dashboard = (props) => {
       return null;
     }
 
+    const cardStyle = {
+      backgroundColor: "#fff",
+      padding: "24px",
+      borderRadius: "12px",
+      border: "1px solid #e6e8ea",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      transition: "box-shadow 0.2s",
+    };
+    const labelStyle = {
+      fontSize: "11px",
+      fontWeight: 700,
+      color: "#6b7280",
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+    };
+    const valueStyle = {
+      fontSize: "28px",
+      fontWeight: 800,
+      marginTop: "4px",
+      color: "#111827",
+    };
+    const barBg = {
+      width: "100%",
+      height: "4px",
+      borderRadius: "4px",
+      backgroundColor: "#f3f4f6",
+      marginTop: "16px",
+      overflow: "hidden",
+    };
+
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 px-4">
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
-          <div className="flex justify-between items-start mb-4">
-            <span className="material-symbols-outlined text-blue-600 bg-blue-50 p-2 rounded-lg">group</span>
-            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">+{getNewUsers7d()} (7d)</span>
+      <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "32px", padding: "0 16px", width: "100%"}}>
+        <div style={cardStyle}>
+          <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px"}}>
+            <span style={{fontSize: "20px"}}>&#128101;</span>
+            <span style={{fontSize: "10px", fontWeight: 700, color: "#059669", backgroundColor: "#ecfdf5", padding: "2px 8px", borderRadius: "10px"}}>+{getNewUsers7d()} (7d)</span>
           </div>
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">{i18next.t("home:Total users")}</h3>
-          <p className="text-3xl font-bold mt-1 text-gray-900">{dashboardData.userCounts[30].toLocaleString()}</p>
-          <div className="w-full bg-gray-100 mt-4 h-1 rounded-full overflow-hidden">
-            <div className="bg-blue-600 h-full" style={{width: "75%"}}></div>
-          </div>
+          <div style={labelStyle}>{i18next.t("home:Total users")}</div>
+          <div style={valueStyle}>{dashboardData.userCounts[30].toLocaleString()}</div>
+          <div style={barBg}><div style={{height: "100%", width: "75%", backgroundColor: "#2563eb", borderRadius: "4px"}}></div></div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
-          <div className="flex justify-between items-start mb-4">
-            <span className="material-symbols-outlined text-blue-900 bg-blue-50 p-2 rounded-lg">apps</span>
-            <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{i18next.t("general:Stable")}</span>
+        <div style={cardStyle}>
+          <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px"}}>
+            <span style={{fontSize: "20px"}}>&#128187;</span>
+            <span style={{fontSize: "10px", fontWeight: 700, color: "#6b7280", backgroundColor: "#f3f4f6", padding: "2px 8px", borderRadius: "10px"}}>{i18next.t("general:Stable")}</span>
           </div>
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">{i18next.t("general:Applications")}</h3>
-          <p className="text-3xl font-bold mt-1 text-gray-900">{dashboardData.applicationCounts[30]}</p>
-          <div className="flex gap-1 mt-4">
-            <div className="h-1 flex-1 bg-blue-600 rounded-full"></div>
-            <div className="h-1 flex-1 bg-blue-600 rounded-full"></div>
-            <div className="h-1 flex-1 bg-blue-600 rounded-full"></div>
-            <div className="h-1 flex-1 bg-gray-100 rounded-full"></div>
-          </div>
+          <div style={labelStyle}>{i18next.t("general:Applications")}</div>
+          <div style={valueStyle}>{dashboardData.applicationCounts[30]}</div>
+          <div style={barBg}><div style={{height: "100%", width: "60%", backgroundColor: "#2563eb", borderRadius: "4px"}}></div></div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
-          <div className="flex justify-between items-start mb-4">
-            <span className="material-symbols-outlined text-red-600 bg-red-50 p-2 rounded-lg">trending_up</span>
+        <div style={cardStyle}>
+          <div style={{marginBottom: "12px"}}>
+            <span style={{fontSize: "20px"}}>&#128200;</span>
           </div>
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">{i18next.t("home:New users today")}</h3>
-          <p className="text-3xl font-bold mt-1 text-gray-900">+{getNewUsersToday()}</p>
-          <div className="w-full bg-gray-100 mt-4 h-1 rounded-full overflow-hidden">
-            <div className="bg-emerald-500 h-full" style={{width: `${Math.min(getNewUsersToday() * 10, 100)}%`}}></div>
-          </div>
+          <div style={labelStyle}>{i18next.t("home:New users today")}</div>
+          <div style={valueStyle}>+{getNewUsersToday()}</div>
+          <div style={barBg}><div style={{height: "100%", width: `${Math.min(getNewUsersToday() * 10, 100)}%`, backgroundColor: "#10b981", borderRadius: "4px"}}></div></div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md">
-          <div className="flex justify-between items-start mb-4">
-            <span className="material-symbols-outlined text-blue-600 bg-blue-50 p-2 rounded-lg">organization</span>
+        <div style={cardStyle}>
+          <div style={{marginBottom: "12px"}}>
+            <span style={{fontSize: "20px"}}>&#127970;</span>
           </div>
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">{i18next.t("general:Organizations")}</h3>
-          <p className="text-3xl font-bold mt-1 text-gray-900">{dashboardData.organizationCounts[30]}</p>
-          <div className="w-full bg-gray-100 mt-4 h-1 rounded-full overflow-hidden">
-            <div className="bg-blue-600 h-full" style={{width: "60%"}}></div>
-          </div>
+          <div style={labelStyle}>{i18next.t("general:Organizations")}</div>
+          <div style={valueStyle}>{dashboardData.organizationCounts[30]}</div>
+          <div style={barBg}><div style={{height: "100%", width: "60%", backgroundColor: "#2563eb", borderRadius: "4px"}}></div></div>
         </div>
       </div>
     );
