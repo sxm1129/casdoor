@@ -152,6 +152,12 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 		_ = c.SessionRegenerateID()
 		c.SetSessionUsername(userId)
 		util.LogInfo(c.Ctx, "API: [%s] signed in", userId)
+
+		// Check password expiration policy
+		if application.OrganizationObj != nil && object.IsPasswordExpired(user, application.OrganizationObj) {
+			user.NeedUpdatePassword = true
+		}
+
 		resp = &Response{Status: "ok", Msg: "", Data: userId, Data3: user.NeedUpdatePassword}
 	} else if form.Type == ResponseTypeCode {
 		clientId := c.Ctx.Input.Query("clientId")

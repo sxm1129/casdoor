@@ -615,6 +615,17 @@ func (c *ApiController) SetPassword() {
 		return
 	}
 
+	// Check if the new password matches any recent password history entries
+	notInHistory, err := object.CheckPasswordAgainstHistory(targetUser, newPassword, organization, 5)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+	if !notInHistory {
+		c.ResponseError(c.T("user:The new password was used recently, please choose a different one"))
+		return
+	}
+
 	application, err := object.GetApplicationByUser(targetUser)
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -651,6 +662,9 @@ func (c *ApiController) SetPassword() {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	// Record the new password hash in history (after successful update)
+	_ = object.AddPasswordHistory(targetUser)
 
 	c.ResponseOk()
 }
