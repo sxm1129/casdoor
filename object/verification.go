@@ -79,7 +79,7 @@ type VerificationRecord struct {
 	IsUsed     bool   `xorm:"notnull" json:"isUsed"`
 }
 
-func IsAllowSend(user *User, remoteAddr, recordType string, application *Application) error {
+func IsAllowSend(user *User, remoteAddr, recordType string, dest string, application *Application) error {
 	var record VerificationRecord
 	record.RemoteAddr = remoteAddr
 	record.Type = recordType
@@ -101,6 +101,19 @@ func IsAllowSend(user *User, remoteAddr, recordType string, application *Applica
 	now := time.Now().Unix()
 	if has && now-record.Time < resendTimeoutInSeconds {
 		return fmt.Errorf("you can only send one code in %ds", resendTimeoutInSeconds)
+	}
+
+	// Double-check against receiver to prevent SMS/Email bombing via IP spoofing
+	if dest != "" {
+		var recordDest VerificationRecord
+		recordDest.Receiver = dest
+		hasDest, err := ormer.Engine.Desc("created_time").Get(&recordDest)
+		if err != nil {
+			return err
+		}
+		if hasDest && now-recordDest.Time < resendTimeoutInSeconds {
+			return fmt.Errorf("you can only send one code in %ds", resendTimeoutInSeconds)
+		}
 	}
 
 	return nil
@@ -141,7 +154,7 @@ func SendVerificationCodeToEmail(organization *Organization, user *User, provide
 	}
 	content = strings.Replace(content, "%{user.friendlyName}", userString, 1)
 
-	err := IsAllowSend(user, remoteAddr, provider.Category, application)
+	err := IsAllowSend(user, remoteAddr, provider.Category, dest, application)
 	if err != nil {
 		return err
 	}
@@ -160,7 +173,7 @@ func SendVerificationCodeToEmail(organization *Organization, user *User, provide
 }
 
 func SendVerificationCodeToPhone(organization *Organization, user *User, provider *Provider, remoteAddr string, dest string, application *Application) error {
-	err := IsAllowSend(user, remoteAddr, provider.Category, application)
+	err := IsAllowSend(user, remoteAddr, provider.Category, dest, application)
 	if err != nil {
 		return err
 	}
