@@ -10,7 +10,7 @@
 
 .portal-card {
   width: 100%;
-  max-width: 640px;
+  max-width: 720px;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
@@ -26,11 +26,32 @@
   letter-spacing: -0.3px;
 }
 
+/* Security tab */
+.portal-card .ant-card {
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+}
+
+.portal-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  font-weight: 600;
+}
+
+.portal-card .ant-list-item {
+  padding: 12px 0;
+}
+
+/* API Keys modal */
+.portal-card .ant-modal-body .ant-typography-copy {
+  margin-left: 8px;
+}
+
 @media (max-width: 640px) {
   .portal-container {
     padding: 16px;
   }
   .portal-card {
     padding: 24px 16px;
+    max-width: 100%;
   }
 }

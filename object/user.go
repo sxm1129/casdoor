@@ -780,6 +780,19 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 		user.Password = oldUser.Password
 	}
 
+	if !isAdmin {
+		// AUDIT r5 fix: Prevent Mass Assignment privilege escalation
+		user.IsAdmin = oldUser.IsAdmin
+		user.IsForbidden = oldUser.IsForbidden
+		user.IsDeleted = oldUser.IsDeleted
+		user.Score = oldUser.Score
+		user.Karma = oldUser.Karma
+		user.Ranking = oldUser.Ranking
+		user.Groups = oldUser.Groups
+		user.Type = oldUser.Type
+		user.Owner = oldUser.Owner
+	}
+
 	if user.Id != oldUser.Id && user.Id == "" {
 		user.Id = oldUser.Id
 	}

@@ -13,8 +13,10 @@
 // limitations under the License.
 
 import React from "react";
-import {Card, Tabs, Form, Input, Button, Avatar, Descriptions, Table, Tag, Spin, message} from "antd";
-import {UserOutlined, LockOutlined, LinkOutlined, HistoryOutlined} from "@ant-design/icons";
+import {Card, Tabs, Form, Input, Button, Avatar, Descriptions, Table, Tag, Spin, message, List, Space, Modal, Typography, Badge} from "antd";
+import {UserOutlined, LockOutlined, KeyOutlined, HistoryOutlined, ExclamationCircleOutlined, CheckCircleOutlined, CopyOutlined, DeleteOutlined, PlusOutlined} from "@ant-design/icons";
+
+const {Text, Paragraph} = Typography;
 import * as Setting from "../Setting";
 import i18next from "i18next";
 import "./portal.css";
@@ -25,14 +27,20 @@ class PortalLayout extends React.Component {
     this.state = {
       user: null,
       sessions: [],
+      apiKeys: [],
+      newKeyVisible: false,
+      newKeyValue: null,
       loading: true,
       activeTab: "profile",
+      passwordForm: {oldPassword: "", newPassword: "", confirmPassword: ""},
+      savingPassword: false,
     };
   }
 
   componentDidMount() {
     this.fetchProfile();
     this.fetchSessions();
+    this.fetchApiKeys();
   }
 
   fetchProfile() {
@@ -62,6 +70,105 @@ class PortalLayout extends React.Component {
       .then(res => {
         if (res.status === "ok") {
           this.setState({sessions: res.data || []});
+        }
+      });
+  }
+
+  fetchApiKeys() {
+    fetch(`${Setting.ServerUrl}/api/get-api-keys`, {
+      method: "GET",
+      credentials: "include",
+      headers: {"Accept-Language": Setting.getAcceptLanguage()},
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "ok") {
+          this.setState({apiKeys: res.data || []});
+        }
+      });
+  }
+
+  generateApiKey() {
+    fetch(`${Setting.ServerUrl}/api/add-api-key`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept-Language": Setting.getAcceptLanguage(),
+      },
+      body: JSON.stringify({description: "Portal generated key"}),
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "ok") {
+          this.setState({newKeyVisible: true, newKeyValue: res.data});
+          this.fetchApiKeys();
+        } else {
+          message.error(res.msg);
+        }
+      });
+  }
+
+  deleteApiKey(id) {
+    Modal.confirm({
+      title: i18next.t("general:Sure to delete") + "?",
+      icon: <ExclamationCircleOutlined />,
+      onOk: () => {
+        fetch(`${Setting.ServerUrl}/api/delete-api-key`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept-Language": Setting.getAcceptLanguage(),
+          },
+          body: JSON.stringify({id}),
+        })
+          .then(res => res.json())
+          .then(res => {
+            if (res.status === "ok") {
+              message.success(i18next.t("general:Successfully deleted"));
+              this.fetchApiKeys();
+            } else {
+              message.error(res.msg);
+            }
+          });
+      },
+    });
+  }
+
+  changePassword() {
+    const {passwordForm} = this.state;
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      message.error(i18next.t("user:Two passwords you typed do not match"));
+      return;
+    }
+    if (!passwordForm.newPassword) {
+      message.error(i18next.t("user:Please input your password"));
+      return;
+    }
+    this.setState({savingPassword: true});
+    fetch(`${Setting.ServerUrl}/api/set-password`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept-Language": Setting.getAcceptLanguage(),
+      },
+      body: JSON.stringify({
+        userOwner: this.state.user?.owner,
+        userName: this.state.user?.name,
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword,
+      }),
+    })
+      .then(res => res.json())
+      .then(res => {
+        this.setState({savingPassword: false});
+        if (res.status === "ok") {
+          message.success(i18next.t("user:Password changed successfully"));
+          this.setState({passwordForm: {oldPassword: "", newPassword: "", confirmPassword: ""}});
+        } else {
+          message.error(res.msg);
         }
       });
   }
@@ -142,6 +249,106 @@ class PortalLayout extends React.Component {
     );
   }
 
+  renderSecurity() {
+    const {passwordForm, savingPassword, user} = this.state;
+    return (
+      <div>
+        <Card title={i18next.t("user:Change Password")} bordered={false} style={{marginBottom: 24}}>
+          <Form layout="vertical" style={{maxWidth: 400}}>
+            <Form.Item label={i18next.t("user:Old Password")}>
+              <Input.Password
+                value={passwordForm.oldPassword}
+                onChange={e => this.setState({passwordForm: {...passwordForm, oldPassword: e.target.value}})}
+              />
+            </Form.Item>
+            <Form.Item label={i18next.t("user:New Password")}>
+              <Input.Password
+                value={passwordForm.newPassword}
+                onChange={e => this.setState({passwordForm: {...passwordForm, newPassword: e.target.value}})}
+              />
+            </Form.Item>
+            <Form.Item label={i18next.t("user:Confirm Password")}>
+              <Input.Password
+                value={passwordForm.confirmPassword}
+                onChange={e => this.setState({passwordForm: {...passwordForm, confirmPassword: e.target.value}})}
+              />
+            </Form.Item>
+            <Button type="primary" loading={savingPassword} onClick={() => this.changePassword()}>
+              {i18next.t("user:Change Password")}
+            </Button>
+          </Form>
+        </Card>
+        <Card title={i18next.t("mfa:Multi-factor authentication")} bordered={false}>
+          <List
+            dataSource={[
+              {type: "Email", enabled: user?.mfaPhoneEnabled || false},
+              {type: "SMS", enabled: user?.mfaEmailEnabled || false},
+              {type: "TOTP", enabled: !!user?.totpSecret},
+            ]}
+            renderItem={item => (
+              <List.Item>
+                <Space>
+                  <Text strong>{item.type}</Text>
+                  {item.enabled
+                    ? <Badge status="success" text={i18next.t("general:Enabled")} />
+                    : <Badge status="default" text={i18next.t("general:Disabled")} />
+                  }
+                </Space>
+              </List.Item>
+            )}
+          />
+        </Card>
+      </div>
+    );
+  }
+
+  renderApiKeys() {
+    const columns = [
+      {title: "ID", dataIndex: "id", key: "id", width: 80},
+      {title: i18next.t("general:Description"), dataIndex: "description", key: "description"},
+      {title: i18next.t("general:Created time"), dataIndex: "createdTime", key: "createdTime",
+        render: (text) => Setting.getFormattedDate(text)},
+      {title: "Prefix", dataIndex: "prefix", key: "prefix",
+        render: (text) => <Tag>{text}...</Tag>},
+      {title: i18next.t("general:Action"), key: "action",
+        render: (_, record) => (
+          <Button danger size="small" icon={<DeleteOutlined />} onClick={() => this.deleteApiKey(record.id)}>
+            {i18next.t("general:Delete")}
+          </Button>
+        )},
+    ];
+
+    return (
+      <div>
+        <Card
+          title="API Keys"
+          bordered={false}
+          extra={
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => this.generateApiKey()}>
+              {i18next.t("general:Generate")}
+            </Button>
+          }
+        >
+          <Table dataSource={this.state.apiKeys} columns={columns} rowKey="id" size="small" pagination={false} />
+        </Card>
+        <Modal
+          title="New API Key Generated"
+          open={this.state.newKeyVisible}
+          onOk={() => this.setState({newKeyVisible: false, newKeyValue: null})}
+          onCancel={() => this.setState({newKeyVisible: false, newKeyValue: null})}
+          cancelButtonProps={{style: {display: "none"}}}
+        >
+          <p style={{color: "#ff4d4f", fontWeight: 600, marginBottom: 12}}>
+            Copy this key now. It will not be shown again.
+          </p>
+          <Paragraph copyable style={{background: "#f5f5f5", padding: 12, borderRadius: 8, fontFamily: "monospace"}}>
+            {this.state.newKeyValue}
+          </Paragraph>
+        </Modal>
+      </div>
+    );
+  }
+
   render() {
     if (this.state.loading) {
       return <div style={{textAlign: "center", padding: 100}}><Spin size="large" /></div>;
@@ -149,7 +356,9 @@ class PortalLayout extends React.Component {
 
     const tabItems = [
       {key: "profile", label: <span><UserOutlined />{i18next.t("portal:Profile")}</span>, children: this.renderProfile()},
+      {key: "security", label: <span><LockOutlined />{i18next.t("portal:Security")}</span>, children: this.renderSecurity()},
       {key: "sessions", label: <span><HistoryOutlined />{i18next.t("portal:Sessions")}</span>, children: this.renderSessions()},
+      {key: "api-keys", label: <span><KeyOutlined />API Keys</span>, children: this.renderApiKeys()},
     ];
 
     return (
