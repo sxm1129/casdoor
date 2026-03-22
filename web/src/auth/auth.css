@@ -1,0 +1,344 @@
+/* ===================================================================
+   Casdoor Auth Pages — Premium Split-Screen Layout
+   Applies to: LoginPage, SignupPage, ForgetPage, MfaSetupPage
+   =================================================================== */
+
+/* ---- CSS Variables (Design Tokens) ---- */
+:root {
+  --auth-brand-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0ea5e9 100%);
+  --auth-bg: #f8fafc;
+  --auth-card-bg: #ffffff;
+  --auth-card-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  --auth-text-primary: #0f172a;
+  --auth-text-secondary: #64748b;
+  --auth-accent: #0ea5e9;
+  --auth-accent-hover: #0284c7;
+  --auth-border: #e2e8f0;
+  --auth-radius: 16px;
+  --auth-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Container: Full viewport split ---- */
+.auth-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--auth-bg);
+}
+
+/* ---- Left Panel: Brand Showcase ---- */
+.auth-brand-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: var(--auth-brand-gradient);
+  padding: 60px 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-brand-panel::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.1);
+  animation: float-orb 20s ease-in-out infinite;
+}
+
+.auth-brand-panel::after {
+  content: '';
+  position: absolute;
+  bottom: -40%;
+  left: -20%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.08);
+  animation: float-orb 25s ease-in-out infinite reverse;
+}
+
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -30px) scale(1.05); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(20px, 10px) scale(1.02); }
+}
+
+.auth-brand-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 420px;
+}
+
+.auth-brand-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: var(--auth-transition);
+}
+
+.auth-brand-logo:hover {
+  transform: scale(1.05);
+}
+
+.auth-brand-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+}
+
+.auth-brand-subtitle {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}
+
+.auth-brand-features {
+  margin-top: 48px;
+  text-align: left;
+}
+
+.auth-brand-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.auth-brand-feature-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ---- Right Panel: Form Area ---- */
+.auth-form-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px;
+  max-width: 560px;
+  min-width: 420px;
+}
+
+.auth-form-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.auth-form-header {
+  margin-bottom: 36px;
+}
+
+.auth-form-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--auth-text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+
+.auth-form-description {
+  font-size: 15px;
+  color: var(--auth-text-secondary);
+  line-height: 1.5;
+}
+
+/* ---- Form Inputs Enhancement ---- */
+.auth-form-card .ant-input,
+.auth-form-card .ant-input-password .ant-input {
+  height: 48px;
+  border-radius: 12px;
+  border: 1.5px solid var(--auth-border);
+  font-size: 15px;
+  padding: 0 16px;
+  transition: var(--auth-transition);
+}
+
+.auth-form-card .ant-input:focus,
+.auth-form-card .ant-input-password .ant-input:focus,
+.auth-form-card .ant-input:hover,
+.auth-form-card .ant-input-password .ant-input:hover {
+  border-color: var(--auth-accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.auth-form-card .ant-input-affix-wrapper {
+  height: 48px;
+  border-radius: 12px;
+  border: 1.5px solid var(--auth-border);
+  padding: 0 16px;
+  transition: var(--auth-transition);
+}
+
+.auth-form-card .ant-input-affix-wrapper:focus,
+.auth-form-card .ant-input-affix-wrapper-focused {
+  border-color: var(--auth-accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* ---- Primary Button ---- */
+.auth-login-btn {
+  width: 100%;
+  height: 48px !important;
+  border-radius: 12px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  background: var(--auth-accent) !important;
+  border: none !important;
+  transition: var(--auth-transition) !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important;
+}
+
+.auth-login-btn:hover {
+  background: var(--auth-accent-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4) !important;
+}
+
+.auth-login-btn:active {
+  transform: translateY(0);
+}
+
+/* ---- Social Login Grid ---- */
+.auth-social-divider {
+  display: flex;
+  align-items: center;
+  margin: 28px 0;
+  color: var(--auth-text-secondary);
+  font-size: 13px;
+}
+
+.auth-social-divider::before,
+.auth-social-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--auth-border);
+}
+
+.auth-social-divider span {
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
+.auth-social-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 12px;
+}
+
+.auth-social-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  border: 1.5px solid var(--auth-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--auth-transition);
+  background: var(--auth-card-bg);
+}
+
+.auth-social-btn:hover {
+  border-color: var(--auth-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.auth-social-btn img {
+  width: 24px;
+  height: 24px;
+}
+
+/* ---- Footer Links ---- */
+.auth-form-footer {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.auth-form-footer a {
+  color: var(--auth-accent);
+  font-weight: 500;
+  transition: var(--auth-transition);
+}
+
+.auth-form-footer a:hover {
+  color: var(--auth-accent-hover);
+}
+
+/* ---- Error Animation ---- */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.auth-error-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* ---- Loading Pulse ---- */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.auth-loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .auth-brand-panel {
+    display: none;
+  }
+  .auth-form-panel {
+    max-width: 100%;
+    min-width: unset;
+  }
+  .auth-container {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-form-panel {
+    padding: 24px 20px;
+  }
+  .auth-form-title {
+    font-size: 24px;
+  }
+  .auth-social-grid {
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 8px;
+  }
+  .auth-social-btn {
+    width: 48px;
+    height: 48px;
+  }
+}

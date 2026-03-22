@@ -15,6 +15,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 
@@ -32,6 +33,9 @@ import (
 	"github.com/casdoor/casdoor/service"
 	"github.com/casdoor/casdoor/util"
 )
+
+//go:embed migrations/*.sql
+var migrationsFS embed.FS
 
 func main() {
 	web.BConfig.WebConfig.Session.SessionOn = true
@@ -51,6 +55,7 @@ func main() {
 	object.InitFlag()
 	object.InitAdapter()
 	object.CreateTables()
+	object.RunGooseMigrations(migrationsFS)
 
 	object.InitDb()
 
