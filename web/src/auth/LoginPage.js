@@ -40,6 +40,7 @@ import * as ProviderButton from "./ProviderButton";
 import {createFormAndSubmit, goToLink} from "../Setting";
 import WeChatLoginPanel from "./WeChatLoginPanel";
 import {CountryCodeSelect} from "../common/select/CountryCodeSelect";
+import "./auth.css";
 const FaceRecognitionCommonModal = lazy(() => import("../common/modal/FaceRecognitionCommonModal"));
 const FaceRecognitionModal = lazy(() => import("../common/modal/FaceRecognitionModal"));
 
@@ -1586,59 +1587,47 @@ class LoginPage extends React.Component {
     const wechatSigninMethods = application.signinMethods?.filter(method => method.name === "WeChat" && method.rule === "Login page");
 
     return (
-      /* AUDIT R4-B7 fix: removed absolute inset-0 z-50 that overlaid parent Layout */
-      <div style={{display: "flex", minHeight: "100vh", width: "100%", fontFamily: "Inter, sans-serif"}}>
-        <section className="hidden lg:flex lg:w-1/2 signature-gradient relative items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
-            <div className="absolute inset-0" style={{backgroundImage: "radial-gradient(#ffffff 0.5px, transparent 0.5px)", backgroundSize: "32px 32px"}}></div>
-          </div>
-          <div className="relative z-10 p-24 max-w-2xl">
-            <div className="mb-12">
-              <span className="material-symbols-outlined text-secondary-fixed-dim text-6xl mb-6" style={{fontVariationSettings: "'FILL' 1"}}>shield_with_heart</span>
-              <h1 className="text-white text-5xl font-bold tracking-tight leading-tight mb-6" style={{fontFamily: "Inter, sans-serif"}}>Architectural security for the modern enterprise.</h1>
-              <p className="text-on-primary-container text-lg leading-relaxed font-light">
-                Deploy Casdoor to centralize identity management across your entire infrastructure with sentinel-grade precision and scale.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <div className="text-secondary-fixed-dim text-2xl font-bold">99.99%</div>
-                <div className="text-[0.6875rem] uppercase tracking-widest font-bold text-on-primary-container">Uptime SLA</div>
+      <div className="auth-container">
+        <div className="auth-brand-panel">
+          <div className="auth-brand-content">
+            {application.logo ? (
+              <img src={application.logo} alt={application.displayName || application.name} className="auth-brand-logo" />
+            ) : null}
+            <h1 className="auth-brand-title">
+              {application.displayName || application.organizationObj?.displayName || "Casdoor"}
+            </h1>
+            <p className="auth-brand-subtitle">
+              {i18next.t("login:Deploy Casdoor to centralize identity management across your entire infrastructure.")}
+            </p>
+            <div className="auth-brand-features">
+              <div className="auth-brand-feature">
+                <div className="auth-brand-feature-icon">&#128274;</div>
+                <span>{i18next.t("login:Enterprise SSO with OAuth 2.0, OIDC, SAML & CAS")}</span>
               </div>
-              <div className="space-y-2">
-                <div className="text-secondary-fixed-dim text-2xl font-bold">ISO 27001</div>
-                <div className="text-[0.6875rem] uppercase tracking-widest font-bold text-on-primary-container">Certified Infrastructure</div>
+              <div className="auth-brand-feature">
+                <div className="auth-brand-feature-icon">&#127760;</div>
+                <span>{i18next.t("login:50+ social login providers worldwide")}</span>
               </div>
-            </div>
-          </div>
-          <div className="absolute bottom-12 right-12 glass-panel p-6 rounded-xl shadow-2xl max-w-xs border border-white/10">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-xl">admin_panel_settings</span>
+              <div className="auth-brand-feature">
+                <div className="auth-brand-feature-icon">&#128737;</div>
+                <span>{i18next.t("login:WebAuthn, MFA & biometric authentication")}</span>
               </div>
-              <div>
-                <div className="text-xs font-bold text-primary uppercase tracking-tight">Active Policy</div>
-                <div className="text-[10px] text-on-surface-variant">Updated 2m ago</div>
-              </div>
-            </div>
-            <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
-              <div className="h-full bg-secondary w-3/4"></div>
             </div>
           </div>
-        </section>
+        </div>
 
-        <section className="w-full lg:w-1/2 flex items-center justify-center bg-surface px-6 md:px-12 relative">
+        <div className="auth-form-panel">
           <CustomGithubCorner />
-          <div className="w-full max-w-md bg-surface-container-lowest p-10 md:p-14 rounded-xl shadow-[0_20px_40px_rgba(0,30,64,0.06)] relative" style={{border: "1px solid #f2f4f6"}}>
-            <div className="mb-10 text-center">
-              <h2 className="text-2xl font-bold tracking-tight text-on-surface mb-2" style={{fontFamily: "Inter, sans-serif"}}>{i18next.t("login:Sign in to Casdoor")}</h2>
-              <p className="text-on-surface-variant text-sm font-medium">{i18next.t("login:Please enter your enterprise credentials to continue.")}</p>
+          <div className="auth-form-card">
+            <div className="auth-form-header">
+              <h2 className="auth-form-title">{i18next.t("login:Sign In")}</h2>
+              <p className="auth-form-description">{i18next.t("login:Please enter your credentials to continue.")}</p>
             </div>
 
             {Setting.inIframe() || Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCss}} />}
             {Setting.inIframe() || !Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCssMobile}} />}
 
-            <div className="login-form w-full" style={{padding: "0"}}>
+            <div className="login-form" style={{padding: "0"}}>
               {this.renderLoginPanel(application)}
             </div>
 
@@ -1651,7 +1640,7 @@ class LoginPage extends React.Component {
               </div>
             ) : null}
           </div>
-        </section>
+        </div>
       </div>
     );
   }
