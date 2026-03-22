@@ -760,6 +760,7 @@ func (c *ApiController) RemoveUserFromGroup() {
 
 	organization, err := object.GetOrganization(util.GetId("admin", owner))
 	if err != nil {
+		c.ResponseError(err.Error()) // AUDIT R12-B1 fix: must return error instead of silently dropping
 		return
 	}
 	item := object.GetAccountItemByName("Groups", organization)

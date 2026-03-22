@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
@@ -156,14 +157,14 @@ func AddRecord(record *Record) bool {
 	util.SafeGoroutine(func() {
 		errWebhook := SendWebhooks(record)
 		if errWebhook != nil {
-			fmt.Println(errWebhook)
+			logs.Error("SendWebhooks failed: %s", errWebhook)
 		}
 	})
 	record.IsTriggered = true
 
 	affected, err := addRecord(record)
 	if err != nil {
-		fmt.Printf("Failed to add audit record: %v\n", err)
+		logs.Error("AddRecord failed: %s", err)
 		return false
 	}
 
