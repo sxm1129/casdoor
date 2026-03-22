@@ -413,6 +413,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	}
 
 	for _, role := range roles {
+		changed := false
 		for j, u := range role.Roles {
 			if u == "*" {
 				continue
@@ -424,11 +425,15 @@ func roleChangeTrigger(oldName string, newName string) error {
 			}
 			if name == oldName {
 				role.Roles[j] = util.GetId(owner, newName)
+				changed = true
 			}
 		}
-		_, err = session.Where("name=?", role.Name).And("owner=?", role.Owner).Update(role)
-		if err != nil {
-			return err
+		if changed {
+			// AUDIT r3 fix: Only issue SQL UPDATE if role was actually modified
+			_, err = session.Where("name=?", role.Name).And("owner=?", role.Owner).Update(role)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -439,6 +444,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	}
 
 	for _, permission := range permissions {
+		changed := false
 		for j, u := range permission.Roles {
 			// u = organization/username
 			if u == "*" {
@@ -451,11 +457,15 @@ func roleChangeTrigger(oldName string, newName string) error {
 			}
 			if name == oldName {
 				permission.Roles[j] = util.GetId(owner, newName)
+				changed = true
 			}
 		}
-		_, err = session.Where("name=?", permission.Name).And("owner=?", permission.Owner).Update(permission)
-		if err != nil {
-			return err
+		if changed {
+			// AUDIT r3 fix: Only issue SQL UPDATE if permission was actually modified
+			_, err = session.Where("name=?", permission.Name).And("owner=?", permission.Owner).Update(permission)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
