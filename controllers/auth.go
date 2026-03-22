@@ -1465,7 +1465,8 @@ func (c *ApiController) DeviceAuth() {
 		if generateTime > 5 {
 			c.Data["json"] = object.TokenError{
 				Error:            "userCode gen",
-				ErrorDescription: c.T("token:Invalid client_id"),
+				// AUDIT r2 fix: Correct the error message
+				ErrorDescription: c.T("token:Failed to generate user code"),
 			}
 			c.ServeJSON()
 			return
@@ -1475,6 +1476,8 @@ func (c *ApiController) DeviceAuth() {
 			break
 		}
 
+		// AUDIT r2 fix: regenerate userCode upon collision
+		userCode = util.GetRandomName()
 		generateTime++
 	}
 
