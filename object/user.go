@@ -824,6 +824,17 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 		return false, err
 	}
 
+	// Audit log: record field-level changes
+	if affected != 0 && oldUser != nil {
+		_ = AddAuditLog(&AuditLog{
+			Actor:        user.GetId(),
+			TargetType:   "user",
+			TargetId:     user.GetId(),
+			Action:       "update",
+			FieldChanges: GenerateFieldDiff(oldUser, user),
+		})
+	}
+
 	return affected != 0, nil
 }
 
@@ -1011,6 +1022,16 @@ func AddUser(user *User, lang string) (bool, error) {
 		return false, err
 	}
 
+	// Audit log: record user creation
+	if affected != 0 {
+		_ = AddAuditLog(&AuditLog{
+			Actor:      user.GetId(),
+			TargetType: "user",
+			TargetId:   user.GetId(),
+			Action:     "create",
+		})
+	}
+
 	return affected != 0, nil
 }
 
@@ -1121,6 +1142,15 @@ func DeleteUser(user *User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	// Audit log: record user deletion
+	_ = AddAuditLog(&AuditLog{
+		Actor:      user.GetId(),
+		TargetType: "user",
+		TargetId:   user.GetId(),
+		Action:     "delete",
+	})
+
 	if organization != nil && organization.EnableSoftDeletion {
 		user.IsDeleted = true
 		user.DeletedTime = util.GetCurrentTime()

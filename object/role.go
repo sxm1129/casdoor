@@ -146,6 +146,17 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	// Invalidate RBAC cache when roles change
 	InvalidateAllRbacCache()
 
+	// Audit log: record role update with field-level diff
+	if affected != 0 && oldRole != nil {
+		_ = AddAuditLog(&AuditLog{
+			Actor:        role.GetId(),
+			TargetType:   "role",
+			TargetId:     role.GetId(),
+			Action:       "update",
+			FieldChanges: GenerateFieldDiff(oldRole, role),
+		})
+	}
+
 	// Sync user_role mapping table
 	if affected != 0 {
 		if err := syncRoleUserMappings(role); err != nil {
@@ -205,6 +216,16 @@ func AddRole(role *Role) (bool, error) {
 	affected, err := ormer.Engine.Insert(role)
 	if err != nil {
 		return false, err
+	}
+
+	// Audit log: record role creation
+	if affected != 0 {
+		_ = AddAuditLog(&AuditLog{
+			Actor:      role.GetId(),
+			TargetType: "role",
+			TargetId:   role.GetId(),
+			Action:     "create",
+		})
 	}
 
 	// Sync user_role mapping table
@@ -284,6 +305,14 @@ func DeleteRole(role *Role) (bool, error) {
 			return false, err
 		}
 	}
+
+	// Audit log: record role deletion
+	_ = AddAuditLog(&AuditLog{
+		Actor:      role.GetId(),
+		TargetType: "role",
+		TargetId:   roleId,
+		Action:     "delete",
+	})
 
 	// Invalidate RBAC cache before deleting role
 	InvalidateAllRbacCache()
