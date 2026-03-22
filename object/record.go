@@ -155,9 +155,9 @@ func AddRecord(record *Record) bool {
 	record.Object = maskPassword(record.Object)
 
 	util.SafeGoroutine(func() {
-		errWebhook := SendWebhooks(record)
+		errWebhook := EnqueueWebhookDeliveries(record)
 		if errWebhook != nil {
-			logs.Error("SendWebhooks failed: %s", errWebhook)
+			logs.Error("EnqueueWebhookDeliveries failed: %s", errWebhook)
 		}
 	})
 	record.IsTriggered = true

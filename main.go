@@ -86,6 +86,7 @@ func main() {
 
 	util.SafeGoroutine(func() { object.RunSyncUsersJob() })
 	util.SafeGoroutine(func() { controllers.InitCLIDownloader() })
+	object.StartWebhookWorker()
 
 	// web.DelStaticPath("/static")
 	// web.SetStaticPath("/static", "web/build/static")
