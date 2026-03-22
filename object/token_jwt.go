@@ -462,7 +462,15 @@ func getClaimsCustom(claims Claims, tokenField []string, tokenAttributes []*JwtI
 }
 
 func refineUser(user *User) *User {
+	// AUDIT R10-B1 fix: clear ALL sensitive fields before JWT embedding
+	// These fields must never appear in tokens as they are visible to bearers
 	user.Password = ""
+	user.PasswordSalt = ""
+	user.PasswordType = ""
+	user.AccessSecret = ""
+	user.TotpSecret = ""
+	user.RecoveryCodes = nil
+	user.MfaItems = nil
 
 	if user.Address == nil {
 		user.Address = []string{}
