@@ -1106,7 +1106,6 @@ func AddUsersInBatch(users []*User) (bool, error) {
 		}
 
 		tmp := users[start:end]
-		fmt.Printf("The syncer adds users: [%d - %d]\n", start, end)
 		if ok, err := AddUsers(tmp); err != nil {
 			return false, err
 		} else if ok {
@@ -1143,20 +1142,38 @@ func DeleteUser(user *User) (bool, error) {
 		return false, err
 	}
 
-	// Audit log: record user deletion
-	_ = AddAuditLog(&AuditLog{
-		Actor:      user.GetId(),
-		TargetType: "user",
-		TargetId:   user.GetId(),
-		Action:     "delete",
-	})
-
 	if organization != nil && organization.EnableSoftDeletion {
 		user.IsDeleted = true
 		user.DeletedTime = util.GetCurrentTime()
-		return UpdateUser(user.GetId(), user, []string{"is_deleted", "deleted_time"}, false)
+		affected, err := UpdateUser(user.GetId(), user, []string{"is_deleted", "deleted_time"}, false)
+		if err != nil {
+			return false, err
+		}
+		if affected {
+			// AUDIT r1 fix: record user deletion after success
+			_ = AddAuditLog(&AuditLog{
+				Actor:      user.GetId(),
+				TargetType: "user",
+				TargetId:   user.GetId(),
+				Action:     "delete",
+			})
+		}
+		return affected, nil
 	} else {
-		return deleteUser(user)
+		affected, err := deleteUser(user)
+		if err != nil {
+			return false, err
+		}
+		if affected {
+			// AUDIT r1 fix: record user deletion after success
+			_ = AddAuditLog(&AuditLog{
+				Actor:      user.GetId(),
+				TargetType: "user",
+				TargetId:   user.GetId(),
+				Action:     "delete",
+			})
+		}
+		return affected, nil
 	}
 }
 
@@ -1193,8 +1210,8 @@ func GetUserInfo(user *User, scope string, aud string, host string) (*Userinfo, 
 
 	if strings.Contains(scope, "email") {
 		resp.Email = user.Email
-		// resp.EmailVerified = user.EmailVerified
-		resp.EmailVerified = true
+		// AUDIT r1 fix: use real email_verified state instead of hardcoded true
+		resp.EmailVerified = user.EmailVerified
 	}
 
 	if strings.Contains(scope, "address") {
