@@ -71,5 +71,5 @@ func UploadRoles(owner string, path string) (bool, error) {
 		return false, nil
 	}
 
-	return AddRolesInBatch(newRoles), nil
+	return AddRolesInBatch(newRoles)
 }

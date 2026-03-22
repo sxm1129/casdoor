@@ -583,7 +583,9 @@ func GetMaskedApplication(application *Application, userId string) *Application 
 
 		user, err := GetUser(userId)
 		if err != nil {
-			panic(err)
+			// If we can't look up the user, fall through to mask the application
+			// rather than panicking the entire server.
+			user = nil
 		}
 		if user != nil {
 			if user.IsApplicationAdmin(application) {

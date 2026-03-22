@@ -238,14 +238,14 @@ func AddRole(role *Role) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddRoles(roles []*Role) bool {
+func AddRoles(roles []*Role) (bool, error) {
 	if len(roles) == 0 {
-		return false
+		return false, nil
 	}
 	affected, err := ormer.Engine.Insert(roles)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
-			panic(err)
+			return false, err
 		}
 	}
 	// AUDIT R2: parallel path fix — sync user_role mappings for batch insert
@@ -254,14 +254,14 @@ func AddRoles(roles []*Role) bool {
 			_ = syncRoleUserMappings(role)
 		}
 	}
-	return affected != 0
+	return affected != 0, nil
 }
 
-func AddRolesInBatch(roles []*Role) bool {
+func AddRolesInBatch(roles []*Role) (bool, error) {
 	batchSize := conf.GetConfigBatchSize()
 
 	if len(roles) == 0 {
-		return false
+		return false, nil
 	}
 
 	affected := false
@@ -274,12 +274,16 @@ func AddRolesInBatch(roles []*Role) bool {
 
 		tmp := roles[start:end]
 		fmt.Printf("The syncer adds roles: [%d - %d]\n", start, end)
-		if AddRoles(tmp) {
+		b, err := AddRoles(tmp)
+		if err != nil {
+			return false, err
+		}
+		if b {
 			affected = true
 		}
 	}
 
-	return affected
+	return affected, nil
 }
 
 func deleteRole(role *Role) (bool, error) {
