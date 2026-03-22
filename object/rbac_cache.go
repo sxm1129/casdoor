@@ -41,18 +41,32 @@ func getUserRolesWithCache(userId string) ([]*Role, error) {
 		rbacCache.Delete(userId)
 	}
 
-	// Cache miss or expired — fetch from DB
-	roles, err := getRolesByUser(userId)
+	// Cache miss or expired — fetch from DB (full pipeline)
+	roles, err := getRolesByUserInternal(userId)
 	if err != nil {
 		return nil, err
 	}
 
+	allRolesIds := []string{}
+	for _, role := range roles {
+		allRolesIds = append(allRolesIds, role.GetId())
+	}
+
+	allRoles, err := GetAncestorRoles(allRolesIds...)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range allRoles {
+		allRoles[i].Users = nil
+	}
+
 	rbacCache.Store(userId, &rbacCacheEntry{
-		roles:    roles,
+		roles:    allRoles,
 		expireAt: time.Now().Add(rbacCacheTTL),
 	})
 
-	return roles, nil
+	return allRoles, nil
 }
 
 // InvalidateRbacCache removes a user's cached RBAC data.

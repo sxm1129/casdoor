@@ -143,6 +143,9 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, err
 	}
 
+	// Invalidate RBAC cache when roles change
+	InvalidateAllRbacCache()
+
 	// Sync user_role mapping table
 	if affected != 0 {
 		if err := syncRoleUserMappings(role); err != nil {
@@ -282,6 +285,9 @@ func DeleteRole(role *Role) (bool, error) {
 		}
 	}
 
+	// Invalidate RBAC cache before deleting role
+	InvalidateAllRbacCache()
+
 	// Clean up user_role mappings
 	if err := deleteRoleUserMappings(roleId); err != nil {
 		return false, err
@@ -359,26 +365,7 @@ func getRolesByUserInternal(userId string) ([]*Role, error) {
 }
 
 func getRolesByUser(userId string) ([]*Role, error) {
-	roles, err := getRolesByUserInternal(userId)
-	if err != nil {
-		return nil, err
-	}
-
-	allRolesIds := []string{}
-	for _, role := range roles {
-		allRolesIds = append(allRolesIds, role.GetId())
-	}
-
-	allRoles, err := GetAncestorRoles(allRolesIds...)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range allRoles {
-		allRoles[i].Users = nil
-	}
-
-	return allRoles, nil
+	return getUserRolesWithCache(userId)
 }
 
 func roleChangeTrigger(oldName string, newName string) error {

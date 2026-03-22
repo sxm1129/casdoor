@@ -292,6 +292,18 @@ func InitAPI() {
 	web.Router("/api/add-webhook", &controllers.ApiController{}, "POST:AddWebhook")
 	web.Router("/api/delete-webhook", &controllers.ApiController{}, "POST:DeleteWebhook")
 
+	web.Router("/api/get-audit-logs", &controllers.ApiController{}, "GET:GetAuditLogs")
+
+	web.Router("/api/get-api-keys", &controllers.ApiController{}, "GET:GetApiKeys")
+	web.Router("/api/add-api-key", &controllers.ApiController{}, "POST:AddApiKey")
+	web.Router("/api/delete-api-key", &controllers.ApiController{}, "POST:DeleteApiKey")
+
+	web.Router("/api/get-webhook-deliveries", &controllers.ApiController{}, "GET:GetWebhookDeliveries")
+
+	web.Router("/api/get-portal-profile", &controllers.ApiController{}, "GET:GetPortalProfile")
+	web.Router("/api/update-portal-profile", &controllers.ApiController{}, "POST:UpdatePortalProfile")
+	web.Router("/api/get-portal-sessions", &controllers.ApiController{}, "GET:GetPortalSessions")
+
 	web.Router("/api/get-tickets", &controllers.ApiController{}, "GET:GetTickets")
 	web.Router("/api/get-ticket", &controllers.ApiController{}, "GET:GetTicket")
 	web.Router("/api/update-ticket", &controllers.ApiController{}, "POST:UpdateTicket")

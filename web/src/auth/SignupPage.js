@@ -30,6 +30,7 @@ import {withRouter} from "react-router-dom";
 import {CountryCodeSelect} from "../common/select/CountryCodeSelect";
 import * as PasswordChecker from "../common/PasswordChecker";
 import * as InvitationBackend from "../backend/InvitationBackend";
+import "./auth.css";
 
 const formItemLayout = {
   labelCol: {
@@ -994,30 +995,30 @@ class SignupPage extends React.Component {
     }
 
     return (
-      <React.Fragment>
-        <CustomGithubCorner />
-        <div className="login-content" style={{margin: this.props.preview ?? this.parseOffset(application.formOffset)}}>
-          {Setting.inIframe() || Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCss}} />}
-          {Setting.inIframe() || !Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCssMobile}} />}
-          <div className={Setting.isDarkTheme(this.props.themeAlgorithm) ? "login-panel-dark" : "login-panel"}>
-            <div className="side-image" style={{display: application.formOffset !== 4 ? "none" : null}}>
-              <div dangerouslySetInnerHTML={{__html: application.formSideHtml}} />
-            </div>
-            <div className="login-form">
-              {
-                Setting.renderHelmet(application)
-              }
-              {
-                Setting.renderLogo(application)
-              }
-              <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
-              {
-                this.renderForm(application)
-              }
-            </div>
+      <div className="auth-container">
+        <div className="auth-brand-panel">
+          <div className="auth-brand-content">
+            {application.logo ? (
+              <img src={application.logo} className="auth-brand-logo" alt={application.displayName} />
+            ) : null}
+            <h1 className="auth-brand-title">{application.displayName}</h1>
+            <p className="auth-brand-subtitle">{i18next.t("signup:Create your account")}</p>
           </div>
         </div>
-      </React.Fragment>
+        <div className="auth-form-panel">
+          <div className="auth-form-card">
+            <CustomGithubCorner />
+            {Setting.inIframe() || Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCss}} />}
+            {Setting.inIframe() || !Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCssMobile}} />}
+            <div className="auth-form-header">
+              {Setting.renderHelmet(application)}
+              {Setting.renderLogo(application)}
+            </div>
+            <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
+            {this.renderForm(application)}
+          </div>
+        </div>
+      </div>
     );
   }
 }

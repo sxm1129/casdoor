@@ -26,6 +26,7 @@ import CustomGithubCorner from "../common/CustomGithubCorner";
 import {withRouter} from "react-router-dom";
 import * as PasswordChecker from "../common/PasswordChecker";
 import * as Obfuscator from "./Obfuscator";
+import "./auth.css";
 
 const {Option} = Select;
 
@@ -524,75 +525,45 @@ class ForgetPage extends React.Component {
     }
 
     return (
-      <React.Fragment>
-        <CustomGithubCorner />
-        <div className="forget-content" style={{padding: Setting.isMobile() ? "0" : null, boxShadow: Setting.isMobile() ? "none" : null}}>
-          {Setting.inIframe() || Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCss}} />}
-          {Setting.inIframe() || !Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCssMobile}} />}
-          <Button type="text"
-            style={{position: "relative", left: Setting.isMobile() ? "10px" : "-90px", top: 0}}
-            icon={<ArrowLeftOutlined style={{fontSize: "24px"}} />}
-            size={"large"}
-            onClick={() => {this.stepBack();}}
-          />
-          <Row>
-            <Col span={24} style={{justifyContent: "center"}}>
-              <Row>
-                <Col span={24}>
-                  <div style={{marginTop: "80px", marginBottom: "10px", textAlign: "center"}}>
-                    {
-                      Setting.renderHelmet(application)
-                    }
-                    {
-                      Setting.renderLogo(application)
-                    }
-                  </div>
-                </Col>
-              </Row>
-              <Row>
-                <Col span={24}>
-                  <div style={{textAlign: "center", fontSize: "28px"}}>
-                    {i18next.t("forget:Reset password")}
-                  </div>
-                </Col>
-              </Row>
-              <Row>
-                <Col span={24}>
-                  <Steps
-                    current={this.state.current}
-                    items={[
-                      {
-                        title: i18next.t("forget:Account"),
-                        icon: <UserOutlined />,
-                      },
-                      {
-                        title: i18next.t("forget:Verify"),
-                        icon: <SolutionOutlined />,
-                      },
-                      {
-                        title: i18next.t("forget:Reset"),
-                        icon: <KeyOutlined />,
-                      },
-                    ]}
-                    style={{
-                      width: "90%",
-                      maxWidth: "500px",
-                      margin: "auto",
-                      marginTop: "80px",
-                    }}
-                  >
-                  </Steps>
-                </Col>
-              </Row>
-            </Col>
-            <Col span={24} style={{display: "flex", justifyContent: "center"}}>
-              <div style={{marginTop: "40px", textAlign: "center"}}>
-                {this.renderForm(application)}
-              </div>
-            </Col>
-          </Row>
+      <div className="auth-container">
+        <div className="auth-brand-panel">
+          <div className="auth-brand-content">
+            {application.logo ? (
+              <img src={application.logo} className="auth-brand-logo" alt={application.displayName} />
+            ) : null}
+            <h1 className="auth-brand-title">{application.displayName}</h1>
+            <p className="auth-brand-subtitle">{i18next.t("forget:Reset password")}</p>
+          </div>
         </div>
-      </React.Fragment>
+        <div className="auth-form-panel">
+          <div className="auth-form-card">
+            <CustomGithubCorner />
+            {Setting.inIframe() || Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCss}} />}
+            {Setting.inIframe() || !Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCssMobile}} />}
+            <Button type="text"
+              style={{marginBottom: 16}}
+              icon={<ArrowLeftOutlined style={{fontSize: "20px"}} />}
+              size={"large"}
+              onClick={() => {this.stepBack();}}
+            />
+            <div className="auth-form-header">
+              {Setting.renderHelmet(application)}
+              {Setting.renderLogo(application)}
+              <h2 className="auth-form-title">{i18next.t("forget:Reset password")}</h2>
+            </div>
+            <Steps
+              current={this.state.current}
+              items={[
+                {title: i18next.t("forget:Account"), icon: <UserOutlined />},
+                {title: i18next.t("forget:Verify"), icon: <SolutionOutlined />},
+                {title: i18next.t("forget:Reset"), icon: <KeyOutlined />},
+              ]}
+              style={{marginBottom: 32}}
+            />
+            {this.renderForm(application)}
+          </div>
+        </div>
+      </div>
     );
   }
 }
