@@ -1031,16 +1031,21 @@ func applicationChangeTrigger(oldName string, newName string) error {
 		return err
 	}
 	for i := 0; i < len(permissions); i++ {
+		changed := false
 		permissionResoureces := permissions[i].Resources
 		for j := 0; j < len(permissionResoureces); j++ {
 			if permissionResoureces[j] == oldName {
 				permissionResoureces[j] = newName
+				changed = true
 			}
 		}
-		permissions[i].Resources = permissionResoureces
-		_, err = session.Where("owner=?", permissions[i].Owner).Where("name=?", permissions[i].Name).Update(permissions[i])
-		if err != nil {
-			return err
+		if changed {
+			permissions[i].Resources = permissionResoureces
+			// AUDIT r4 fix: Only issue SQL UPDATE if resources were modified
+			_, err = session.Where("owner=?", permissions[i].Owner).Where("name=?", permissions[i].Name).Update(permissions[i])
+			if err != nil {
+				return err
+			}
 		}
 	}
 

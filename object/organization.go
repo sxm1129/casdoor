@@ -430,66 +430,87 @@ func organizationChangeTrigger(oldName string, newName string) error {
 		return err
 	}
 
-	role := new(Role)
-	_, err = ormer.Engine.Where("owner=?", oldName).Get(role)
+	var roles []*Role
+	err = ormer.Engine.Find(&roles)
 	if err != nil {
 		return err
 	}
-	for i, u := range role.Users {
-		// u = organization/username
-		owner, name, err := util.GetOwnerAndNameFromIdWithError(u)
-		if err != nil {
-			return err
+	for _, role := range roles {
+		changed := false
+		for i, u := range role.Users {
+			owner, name, err := util.GetOwnerAndNameFromIdWithError(u)
+			if err != nil {
+				return err
+			}
+			// AUDIT r4 fix: compare owner == oldName, not name
+			if owner == oldName {
+				role.Users[i] = util.GetId(newName, name)
+				changed = true
+			}
 		}
-		if name == oldName {
-			role.Users[i] = util.GetId(owner, newName)
+		for i, u := range role.Roles {
+			owner, name, err := util.GetOwnerAndNameFromIdWithError(u)
+			if err != nil {
+				return err
+			}
+			if owner == oldName {
+				role.Roles[i] = util.GetId(newName, name)
+				changed = true
+			}
 		}
-	}
-	for i, u := range role.Roles {
-		// u = organization/username
-		owner, name, err := util.GetOwnerAndNameFromIdWithError(u)
-		if err != nil {
-			return err
+		
+		targetOwner := role.Owner
+		if role.Owner == oldName {
+			role.Owner = newName
+			changed = true
 		}
-		if name == oldName {
-			role.Roles[i] = util.GetId(owner, newName)
+		if changed {
+			_, err = session.Where("name=?", role.Name).And("owner=?", targetOwner).Update(role)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	role.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(role)
-	if err != nil {
-		return err
 	}
 
-	permission := new(Permission)
-	_, err = ormer.Engine.Where("owner=?", oldName).Get(permission)
+	var permissions []*Permission
+	err = ormer.Engine.Find(&permissions)
 	if err != nil {
 		return err
 	}
-	for i, u := range permission.Users {
-		// u = organization/username
-		owner, name, err := util.GetOwnerAndNameFromIdWithError(u)
-		if err != nil {
-			return err
+	for _, permission := range permissions {
+		changed := false
+		for i, u := range permission.Users {
+			owner, name, err := util.GetOwnerAndNameFromIdWithError(u)
+			if err != nil {
+				return err
+			}
+			if owner == oldName {
+				permission.Users[i] = util.GetId(newName, name)
+				changed = true
+			}
 		}
-		if name == oldName {
-			permission.Users[i] = util.GetId(owner, newName)
+		for i, u := range permission.Roles {
+			owner, name, err := util.GetOwnerAndNameFromIdWithError(u)
+			if err != nil {
+				return err
+			}
+			if owner == oldName {
+				permission.Roles[i] = util.GetId(newName, name)
+				changed = true
+			}
 		}
-	}
-	for i, u := range permission.Roles {
-		// u = organization/username
-		owner, name, err := util.GetOwnerAndNameFromIdWithError(u)
-		if err != nil {
-			return err
+
+		targetOwner := permission.Owner
+		if permission.Owner == oldName {
+			permission.Owner = newName
+			changed = true
 		}
-		if name == oldName {
-			permission.Roles[i] = util.GetId(owner, newName)
+		if changed {
+			_, err = session.Where("name=?", permission.Name).And("owner=?", targetOwner).Update(permission)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	permission.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(permission)
-	if err != nil {
-		return err
 	}
 
 	adapter := new(Adapter)
