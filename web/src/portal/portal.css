@@ -1,0 +1,36 @@
+/* Portal — Self-Service User Account */
+.portal-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 24px;
+  background: #f5f7fa;
+}
+
+.portal-card {
+  width: 100%;
+  max-width: 640px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  padding: 40px;
+}
+
+.portal-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 24px;
+  letter-spacing: -0.3px;
+}
+
+@media (max-width: 640px) {
+  .portal-container {
+    padding: 16px;
+  }
+  .portal-card {
+    padding: 24px 16px;
+  }
+}
