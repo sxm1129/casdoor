@@ -147,6 +147,16 @@ func getObject(ctx *context.Context) (string, string, error) {
 			}
 		}
 
+		// AUDIT r7 fix: Prevent global IDOR bypass over all Update API endpoints.
+		// Historically, attackers could bypass authorization by spoofing `owner` and `name` in the POST body to match their own username,
+		// while passing a different target user's `id` in the query string.
+		if strings.HasPrefix(path, "/api/update-") {
+			id := ctx.Input.Query("id")
+			if id != "" {
+				return util.GetOwnerAndNameFromIdWithError(id)
+			}
+		}
+
 		body := ctx.Input.RequestBody
 		if len(body) == 0 {
 			return ctx.Request.Form.Get("owner"), ctx.Request.Form.Get("name"), nil

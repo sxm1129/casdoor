@@ -229,6 +229,25 @@ func (c *ApiController) UploadResource() {
 	createdTime := c.Ctx.Input.Query("createdTime")
 	description := c.Ctx.Input.Query("description")
 
+	// AUDIT r7 fix: Prevent arbitrary file upload & IDOR avatar override.
+	isGlobalAdmin, sessionUserObj := c.isGlobalAdmin()
+	isPermitted := false
+	if isGlobalAdmin {
+		isPermitted = true
+	} else if username == "Built-in-Untracked" {
+		isPermitted = true
+	} else if sessionUserObj != nil {
+		if sessionUserObj.Owner == owner && sessionUserObj.Name == username {
+			isPermitted = true
+		} else if sessionUserObj.IsAdmin && sessionUserObj.Owner == owner {
+			isPermitted = true
+		}
+	}
+	if !isPermitted {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	file, header, err := c.GetFile("file")
 	if err != nil {
 		c.ResponseError(err.Error())
