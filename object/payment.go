@@ -284,11 +284,18 @@ func NotifyPayment(body []byte, owner string, paymentName string, lang string) (
 		return payment, nil
 	}
 
+	oldState := payment.State
 	payment.State = newState
 	payment.Message = newMessage
-	_, err = UpdatePayment(payment.GetId(), payment)
+	
+	// AUDIT r6 fix: Prevent double-spend race condition by using optimistic locking
+	affected, err := ormer.Engine.ID(core.PK{payment.Owner, payment.Name}).Where("state = ?", oldState).Cols("state", "message").Update(payment)
 	if err != nil {
 		return nil, err
+	}
+	if affected == 0 {
+		// Another thread already processed the webhook
+		return payment, nil
 	}
 
 	// Update order state based on payment status
