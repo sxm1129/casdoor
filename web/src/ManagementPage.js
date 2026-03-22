@@ -110,6 +110,9 @@ import ServerListPage from "./ServerListPage";
 import ServerEditPage from "./ServerEditPage";
 import RuleEditPage from "./RuleEditPage";
 import RuleListPage from "./RuleListPage";
+import AuditLogListPage from "./AuditLogListPage";
+import ApiKeyListPage from "./ApiKeyListPage";
+import PortalLayout from "./portal/PortalLayout";
 
 function ManagementPage(props) {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -355,6 +358,7 @@ function ManagementPage(props) {
     res.push(Setting.getItem(<Link style={{color: textColor}} to="/sessions">{i18next.t("general:Logging & Auditing")}</Link>, "/logs", <WalletTwoTone twoToneColor={twoToneColor} />, [
       Setting.getItem(<Link to="/sessions">{i18next.t("general:Sessions")}</Link>, "/sessions"),
       Setting.getItem(<Link to="/records">{i18next.t("general:Records")}</Link>, "/records"),
+      Setting.getItem(<Link to="/audit-logs">{"Audit Logs"}</Link>, "/audit-logs"),
       Setting.getItem(<Link to="/tokens">{i18next.t("general:Tokens")}</Link>, "/tokens"),
       Setting.getItem(<Link to="/verifications">{i18next.t("general:Verifications")}</Link>, "/verifications"),
     ]));
@@ -377,6 +381,7 @@ function ManagementPage(props) {
         Setting.getItem(<Link to="/forms">{i18next.t("general:Forms")}</Link>, "/forms"),
         Setting.getItem(<Link to="/syncers">{i18next.t("general:Syncers")}</Link>, "/syncers"),
         Setting.getItem(<Link to="/webhooks">{i18next.t("general:Webhooks")}</Link>, "/webhooks"),
+        Setting.getItem(<Link to="/api-keys">{"API Keys"}</Link>, "/api-keys"),
         Setting.getItem(<Link to="/tickets">{i18next.t("general:Tickets")}</Link>, "/tickets"),
         Setting.getItem(<a target="_blank" rel="noreferrer" href={Setting.isLocalhost() ? `${Setting.ServerUrl}/swagger` : "/swagger"}>{i18next.t("general:Swagger")}</a>, "/swagger")]));
     } else {
@@ -537,6 +542,9 @@ function ManagementPage(props) {
         <Route exact path="/ldap/sync/:organizationName/:ldapId" render={(props) => renderLoginIfNotLoggedIn(<LdapSyncPage account={account} {...props} />)} />
         <Route exact path="/mfa/setup" render={(props) => renderLoginIfNotLoggedIn(<MfaSetupPage account={account} onfinish={onfinish} {...props} />)} />
         <Route exact path="/.well-known/openid-configuration" render={(props) => <OdicDiscoveryPage />} />
+        <Route exact path="/audit-logs" render={(props) => renderLoginIfNotLoggedIn(<AuditLogListPage account={account} {...props} />)} />
+        <Route exact path="/api-keys" render={(props) => renderLoginIfNotLoggedIn(<ApiKeyListPage account={account} {...props} />)} />
+        <Route exact path="/portal" render={(props) => renderLoginIfNotLoggedIn(<PortalLayout account={account} {...props} />)} />
         <Route path="" render={() => <Result status="404" title="404 NOT FOUND" subTitle={i18next.t("general:Sorry, the page you visited does not exist.")}
           extra={<a href="/"><Button type="primary">{i18next.t("general:Back Home")}</Button></a>} />} />
       </Switch>
