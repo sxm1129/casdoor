@@ -96,7 +96,8 @@ func GetDashboard(owner string) (*map[string][]int64, error) {
 	for i := 30; i >= 0; i-- {
 		cutTime := nowTime.AddDate(0, 0, -i)
 		for _, tableName := range tableNames {
-			item, exist := dashboardMap.Load(tableName)
+			tableFullName := tableNamePrefix + tableName
+			item, exist := dashboardMap.Load(tableFullName)
 			if !exist {
 				continue
 			}
