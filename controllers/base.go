@@ -72,6 +72,22 @@ func (c *ApiController) IsAdminOrSelf(user2 *object.User) bool {
 	return false
 }
 
+// IsOrgAdminOfOwner checks whether the current user has admin privileges
+// over the specified organization (targetOwner).
+// Global admins (built-in org) always return true.
+// Org admins return true only for their own organization.
+// Non-admins always return false.
+func (c *ApiController) IsOrgAdminOfOwner(targetOwner string) bool {
+	isGlobalAdmin, user := c.isGlobalAdmin()
+	if isGlobalAdmin {
+		return true
+	}
+	if user == nil {
+		return false
+	}
+	return user.IsAdmin && user.Owner == targetOwner
+}
+
 func (c *ApiController) isGlobalAdmin() (bool, *object.User) {
 	username := c.GetSessionUsername()
 	if object.IsAppUser(username) {
