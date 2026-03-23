@@ -5,7 +5,7 @@
   "dependencies": {
     "@ant-design/cssinjs": "^1.23.0",
     "@ant-design/icons": "^5.6.1",
-    "@craco/craco": "^6.4.5",
+
     "@crowdin/cli": "^3.7.10",
     "@ctrl/tinycolor": "^3.5.0",
     "@emotion/react": "^11.10.5",
@@ -31,7 +31,7 @@
     "codemirror": "^6.0.1",
     "copy-to-clipboard": "^3.3.1",
     "core-js": "^3.25.0",
-    "craco-less": "^2.0.0",
+
     "crypto-js": "^4.2.0",
     "echarts": "^5.4.3",
     "ethers": "5.6.9",
@@ -55,16 +55,16 @@
     "react-i18next": "^11.8.7",
     "react-metamask-avatar": "^1.2.1",
     "react-router-dom": "^5.3.3",
-    "react-scripts": "5.0.1",
+
     "react-social-login-buttons": "^3.4.0",
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "cross-env PORT=7001 craco start",
-    "build": "craco build",
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
     "postbuild": "node mv.js",
-    "test": "craco test",
-    "eject": "craco eject",
+    "preview": "vite preview",
     "crowdin:sync": "crowdin upload && crowdin download",
     "preinstall": "node -e \"if (process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('Use yarn for installing: https://yarnpkg.com/en/docs/install')\"",
     "fix": "eslint --fix src/**/*.{js,jsx,ts,tsx}",
@@ -104,7 +104,11 @@
     "lint-staged": "^13.0.3",
     "stylelint": "^14.11.0",
     "stylelint-config-recommended-less": "^1.0.4",
-    "stylelint-config-standard": "^28.0.0"
+    "stylelint-config-standard": "^28.0.0",
+    "vite": "^6.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "less": "^4.2.0"
   },
   "lint-staged": {
     "src/**/*.{css,less}": [
