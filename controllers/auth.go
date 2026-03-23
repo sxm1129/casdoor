@@ -1422,7 +1422,6 @@ func (c *ApiController) GetCaptchaStatus() {
 		return
 	}
 	c.ResponseOk(captchaEnabled)
-	return
 }
 
 // Callback

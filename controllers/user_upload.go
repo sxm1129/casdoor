@@ -85,3 +85,34 @@ func (c *ApiController) UploadUsers() {
 		c.ResponseError(c.T("general:Failed to import users"))
 	}
 }
+
+// ExportUsers
+// @Title ExportUsers
+// @Tag User API
+// @Description export users to CSV file
+// @Param   owner    query    string  true        "organization name"
+// @Success 200 {string} CSV file content
+// @router /export-users [get]
+func (c *ApiController) ExportUsers() {
+	if !c.IsAdmin() {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	owner := c.Ctx.Input.Query("owner")
+	if owner == "" {
+		c.ResponseError(c.T("general:Missing parameter") + ": owner")
+		return
+	}
+
+	csvData, err := object.ExportUsersToCSV(owner)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	filename := fmt.Sprintf("users_%s.csv", owner)
+	c.Ctx.Output.Header("Content-Type", "text/csv; charset=utf-8")
+	c.Ctx.Output.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	_, _ = c.Ctx.ResponseWriter.Write(csvData)
+}
