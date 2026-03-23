@@ -35,7 +35,7 @@ func forwardHandler(targetUrl string, writer http.ResponseWriter, request *http.
 	target, err := url.Parse(targetUrl)
 
 	if nil != err {
-		panic(err)
+		http.Error(writer, fmt.Sprintf("invalid target URL: %v", err), http.StatusBadGateway)
 		return
 	}
 
@@ -163,7 +163,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			_, err := fmt.Fprintf(w, "OK")
 			if err != nil {
-				panic(err)
+				logs.Error("failed to write health-ping response: %v", err)
 			}
 			return
 		}
@@ -219,7 +219,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		// handle oAuth proxy
 		cookie, err := r.Cookie("casdoor_access_token")
 		if err != nil && err.Error() != "http: named cookie not present" {
-			panic(err)
+			responseError(w, "CasWAF error: cookie read failed: %s", err.Error())
+			return
 		}
 
 		casdoorClient, err := getCasdoorClientFromSite(site)

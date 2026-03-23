@@ -48,7 +48,7 @@ func getOrganizationThemeCookieFromUrlPath(ctx *context.Context, urlPath string)
 	var organization *object.Organization
 	var err error
 	if urlPath == "/login" || urlPath == "/signup" {
-		application, err = object.GetDefaultApplication(fmt.Sprintf("admin/built-in"))
+		application, err = object.GetDefaultApplication("admin/built-in")
 		if err != nil {
 			return nil, err
 		}
