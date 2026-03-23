@@ -81,8 +81,10 @@ func processOneDelivery(delivery *WebhookDelivery) {
 	// Evaluate result
 	if statusCode >= 200 && statusCode < 300 && sendErr == nil {
 		delivery.Status = DeliveryStatusSuccess
+		WebhookDeliveries.WithLabelValues("success").Inc()
 	} else if delivery.Attempts >= delivery.MaxAttempts {
 		delivery.Status = DeliveryStatusFailed
+		WebhookDeliveries.WithLabelValues("failed").Inc()
 	} else {
 		// Schedule retry with exponential backoff: 4^(attempt-1) seconds
 		backoff := time.Duration(1<<(2*delivery.Attempts)) * time.Second

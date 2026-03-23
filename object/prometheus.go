@@ -67,6 +67,21 @@ var (
 		Name: "casdoor_total_throughput",
 		Help: "The total throughput of casdoor",
 	})
+
+	LoginAttempts = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "casdoor_login_attempts_total",
+		Help: "Total login attempts by organization and result",
+	}, []string{"organization", "result"})
+
+	WebhookDeliveries = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "casdoor_webhook_deliveries_total",
+		Help: "Total webhook deliveries by status",
+	}, []string{"status"})
+
+	TokensIssued = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "casdoor_tokens_issued_total",
+		Help: "Total number of tokens issued",
+	})
 )
 
 func ClearThroughputPerSecond() {
