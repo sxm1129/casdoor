@@ -310,6 +310,12 @@ func (c *ApiController) UpdateUser() {
 		return
 	}
 
+	// Org-scope RBAC: non-global admins can only update users in their own org
+	if !c.IsGlobalAdmin() && !c.IsOrgAdminOfOwner(oldUser.Owner) && !c.IsAdminOrSelf(oldUser) {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if oldUser.Owner == "built-in" && oldUser.Name == "admin" && (user.Owner != "built-in" || user.Name != "admin") {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return

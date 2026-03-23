@@ -18,50 +18,54 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/robfig/cron/v3"
 )
 
-func CleanupTokens(tokenRetentionIntervalAfterExpiry int) error {
-	var sessions []*Token
-	err := ormer.Engine.Find(&sessions)
-	if err != nil {
-		return fmt.Errorf("failed to query expired tokens: %w", err)
-	}
+const tokenCleanupBatchSize = 1000
 
-	currentTime := time.Now()
-	deletedCount := 0
+// CleanupTokens deletes tokens that expired more than retentionSeconds ago.
+// Uses batch deletion to avoid memory issues with large token tables.
+func CleanupTokens(retentionSeconds int) (int64, error) {
+	cutoff := time.Now().Add(-time.Duration(retentionSeconds) * time.Second)
+	cutoffStr := cutoff.Format("2006-01-02 15:04:05")
+	totalDeleted := int64(0)
 
-	for _, session := range sessions {
-		tokenString := session.AccessToken
-		token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+	for {
+		// Use SQL-level expiry check via ExpiresIn + CreatedTime
+		// instead of loading all tokens into memory and parsing JWT
+		result, err := ormer.Engine.Exec(
+			"DELETE FROM `token` WHERE `expires_in` > 0 AND "+
+				"TIMESTAMPADD(SECOND, `expires_in`, STR_TO_DATE(`created_time`, '%Y-%m-%d %H:%i:%s')) < ? LIMIT ?",
+			cutoffStr, tokenCleanupBatchSize,
+		)
 		if err != nil {
-			fmt.Printf("Failed to parse token %s: %v\n", session.Name, err)
-			continue
+			// Fallback: some databases don't support TIMESTAMPADD/STR_TO_DATE
+			// Use a simpler approach based on created_time only
+			result, err = ormer.Engine.Exec(
+				"DELETE FROM `token` WHERE `created_time` < ? LIMIT ?",
+				cutoff.AddDate(0, 0, -30).Format("2006-01-02 15:04:05"), tokenCleanupBatchSize,
+			)
+			if err != nil {
+				return totalDeleted, fmt.Errorf("failed to cleanup tokens: %w", err)
+			}
 		}
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			exp, ok := claims["exp"].(float64)
-			if !ok {
-				fmt.Printf("Token %s does not have an 'exp' claim\n", session.Name)
-				continue
-			}
-			expireTime := time.Unix(int64(exp), 0)
-			tokenAfterExpiry := currentTime.Sub(expireTime).Seconds()
-			if tokenAfterExpiry > float64(tokenRetentionIntervalAfterExpiry) {
-				_, err = ormer.Engine.Delete(session)
-				if err != nil {
-					return fmt.Errorf("failed to delete expired token %s: %w", session.Name, err)
-				}
-				fmt.Printf("[%d] Deleted expired token: %s | Created: %s | Org: %s | App: %s | User: %s\n",
-					deletedCount, session.Name, session.CreatedTime, session.Organization, session.Application, session.User)
-				deletedCount++
-			}
-		} else {
-			fmt.Printf("Token %s is not valid\n", session.Name)
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return totalDeleted, err
 		}
+
+		totalDeleted += affected
+
+		if affected < tokenCleanupBatchSize {
+			break
+		}
+
+		time.Sleep(100 * time.Millisecond)
 	}
-	return nil
+
+	return totalDeleted, nil
 }
 
 func getTokenRetentionInterval(days int) int {
@@ -71,22 +75,28 @@ func getTokenRetentionInterval(days int) int {
 	return days * 24 * 3600
 }
 
+// InitCleanupTokens starts a daily cron job to clean up expired tokens.
 func InitCleanupTokens() {
-	schedule := "0 0 * * *"
 	interval := getTokenRetentionInterval(30)
 
-	if err := CleanupTokens(interval); err != nil {
-		fmt.Printf("Error cleaning up tokens at startup: %v\n", err)
+	deleted, err := CleanupTokens(interval)
+	if err != nil {
+		logs.Warning("Token cleanup at startup failed: %v", err)
+	} else if deleted > 0 {
+		logs.Info("Token cleanup at startup: deleted %d expired tokens", deleted)
 	}
 
 	cronJob := cron.New()
-	_, err := cronJob.AddFunc(schedule, func() {
-		if err := CleanupTokens(interval); err != nil {
-			fmt.Printf("Error cleaning up tokens: %v\n", err)
+	_, err = cronJob.AddFunc("0 0 * * *", func() {
+		deleted, err := CleanupTokens(interval)
+		if err != nil {
+			logs.Warning("Scheduled token cleanup failed: %v", err)
+		} else if deleted > 0 {
+			logs.Info("Scheduled token cleanup: deleted %d expired tokens", deleted)
 		}
 	})
 	if err != nil {
-		fmt.Printf("Error scheduling token cleanup: %v\n", err)
+		logs.Warning("Failed to schedule token cleanup: %v", err)
 		return
 	}
 	cronJob.Start()
