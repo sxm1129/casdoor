@@ -417,14 +417,104 @@ func (p *LarkSyncerProvider) larkUserToOriginalUser(larkUser *LarkUser) *Origina
 	return user
 }
 
-// GetOriginalGroups retrieves all groups from Lark (not implemented yet)
-func (p *LarkSyncerProvider) GetOriginalGroups() ([]*OriginalGroup, error) {
-	// TODO: Implement Lark group sync
-	return []*OriginalGroup{}, nil
+// LarkDeptDetailResp represents a single department detail from Lark API
+type LarkDeptDetailResp struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data struct {
+		Department struct {
+			DepartmentId       string `json:"department_id"`
+			Name               string `json:"name"`
+			ParentDepartmentId string `json:"parent_department_id"`
+			LeaderUserId       string `json:"leader_user_id"`
+			MemberCount        int    `json:"member_count"`
+		} `json:"department"`
+	} `json:"data"`
 }
 
-// GetOriginalUserGroups retrieves the group IDs that a user belongs to (not implemented yet)
-func (p *LarkSyncerProvider) GetOriginalUserGroups(userId string) ([]string, error) {
-	// TODO: Implement Lark user group membership sync
-	return []string{}, nil
+// GetOriginalGroups retrieves all departments from Lark as groups.
+func (p *LarkSyncerProvider) GetOriginalGroups() ([]*OriginalGroup, error) {
+	accessToken, err := p.getLarkAccessToken()
+	if err != nil {
+		return nil, err
+	}
+
+	deptIds, err := p.getLarkDepartments(accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	groups := []*OriginalGroup{}
+	domain := p.getLarkDomain()
+
+	for _, deptId := range deptIds {
+		if deptId == "0" {
+			// Root department — add a synthetic entry
+			groups = append(groups, &OriginalGroup{
+				Id:          "0",
+				Name:        "root",
+				DisplayName: "Root Department",
+				Type:        "department",
+			})
+			continue
+		}
+
+		apiUrl := fmt.Sprintf("%s/open-apis/contact/v3/departments/%s", domain, deptId)
+		data, err := p.getWithAuth(apiUrl, accessToken)
+		if err != nil {
+			continue
+		}
+
+		var deptResp LarkDeptDetailResp
+		err = json.Unmarshal(data, &deptResp)
+		if err != nil || deptResp.Code != 0 {
+			continue
+		}
+
+		dept := deptResp.Data.Department
+		groups = append(groups, &OriginalGroup{
+			Id:          dept.DepartmentId,
+			Name:        dept.DepartmentId,
+			DisplayName: dept.Name,
+			Type:        "department",
+			Manager:     dept.LeaderUserId,
+		})
+	}
+
+	return groups, nil
 }
+
+// GetOriginalUserGroups retrieves the department IDs that a Lark user belongs to.
+func (p *LarkSyncerProvider) GetOriginalUserGroups(userId string) ([]string, error) {
+	accessToken, err := p.getLarkAccessToken()
+	if err != nil {
+		return nil, err
+	}
+
+	domain := p.getLarkDomain()
+	apiUrl := fmt.Sprintf("%s/open-apis/contact/v3/users/%s", domain, userId)
+	data, err := p.getWithAuth(apiUrl, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Code int    `json:"code"`
+		Msg  string `json:"msg"`
+		Data struct {
+			User struct {
+				DepartmentIds []string `json:"department_ids"`
+			} `json:"user"`
+		} `json:"data"`
+	}
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Code != 0 {
+		return nil, fmt.Errorf("failed to get user %s groups: code=%d, msg=%s", userId, resp.Code, resp.Msg)
+	}
+
+	return resp.Data.User.DepartmentIds, nil
+}
+

@@ -306,14 +306,125 @@ func (p *WecomSyncerProvider) wecomUserToOriginalUser(wecomUser *WecomUser) *Ori
 	return user
 }
 
-// GetOriginalGroups retrieves all groups from WeCom (not implemented yet)
-func (p *WecomSyncerProvider) GetOriginalGroups() ([]*OriginalGroup, error) {
-	// TODO: Implement WeCom group sync
-	return []*OriginalGroup{}, nil
+// WecomDeptDetailResp represents department detail from WeCom API
+type WecomDeptDetailResp struct {
+	Errcode    int    `json:"errcode"`
+	Errmsg     string `json:"errmsg"`
+	Department struct {
+		Id               int    `json:"id"`
+		Name             string `json:"name"`
+		ParentId         int    `json:"parentid"`
+		DepartmentLeader string `json:"department_leader"`
+	} `json:"department"`
 }
 
-// GetOriginalUserGroups retrieves the group IDs that a user belongs to (not implemented yet)
+// GetOriginalGroups retrieves all departments from WeCom as groups.
+func (p *WecomSyncerProvider) GetOriginalGroups() ([]*OriginalGroup, error) {
+	accessToken, err := p.getWecomAccessToken()
+	if err != nil {
+		return nil, err
+	}
+
+	deptIds, err := p.getWecomDepartments(accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	groups := []*OriginalGroup{}
+	for _, deptId := range deptIds {
+		apiUrl := fmt.Sprintf("https://qyapi.weixin.qq.com/cgi-bin/department/get?access_token=%s&id=%d",
+			url.QueryEscape(accessToken), deptId)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		req, err := http.NewRequestWithContext(ctx, "GET", apiUrl, nil)
+		if err != nil {
+			cancel()
+			continue
+		}
+
+		client := &http.Client{Timeout: 30 * time.Second}
+		resp, err := client.Do(req)
+		cancel()
+		if err != nil {
+			continue
+		}
+
+		data, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			continue
+		}
+
+		var deptResp WecomDeptDetailResp
+		err = json.Unmarshal(data, &deptResp)
+		if err != nil || deptResp.Errcode != 0 {
+			continue
+		}
+
+		dept := deptResp.Department
+		groups = append(groups, &OriginalGroup{
+			Id:          fmt.Sprintf("%d", dept.Id),
+			Name:        fmt.Sprintf("%d", dept.Id),
+			DisplayName: dept.Name,
+			Type:        "department",
+			Manager:     dept.DepartmentLeader,
+		})
+	}
+
+	return groups, nil
+}
+
+// WecomUserDetailResp represents a user detail response from WeCom API
+type WecomUserDetailResp struct {
+	Errcode    int    `json:"errcode"`
+	Errmsg     string `json:"errmsg"`
+	Department []int  `json:"department"`
+}
+
+// GetOriginalUserGroups retrieves the department IDs that a WeCom user belongs to.
 func (p *WecomSyncerProvider) GetOriginalUserGroups(userId string) ([]string, error) {
-	// TODO: Implement WeCom user group membership sync
-	return []string{}, nil
+	accessToken, err := p.getWecomAccessToken()
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := fmt.Sprintf("https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token=%s&userid=%s",
+		url.QueryEscape(accessToken), url.QueryEscape(userId))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var userResp WecomUserDetailResp
+	err = json.Unmarshal(data, &userResp)
+	if err != nil {
+		return nil, err
+	}
+	if userResp.Errcode != 0 {
+		return nil, fmt.Errorf("failed to get user %s details: errcode=%d, errmsg=%s",
+			userId, userResp.Errcode, userResp.Errmsg)
+	}
+
+	groupIds := []string{}
+	for _, deptId := range userResp.Department {
+		groupIds = append(groupIds, fmt.Sprintf("%d", deptId))
+	}
+
+	return groupIds, nil
 }
